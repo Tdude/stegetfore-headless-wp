@@ -78,7 +78,7 @@ add_action('rest_api_init', function() {
         'callback' => function($request) {
             $posts = get_posts([
                 'post_type' => 'post',
-                'posts_per_page' => 10,
+                'posts_per_page' => 12,
                 'post_status' => 'publish'
             ]);
 
@@ -96,6 +96,54 @@ add_action('rest_api_init', function() {
                     'modified' => $post->post_modified
                 ];
             }, $posts);
+        },
+        'permission_callback' => '__return_true'
+    ]);
+
+    // Menu endpoint
+    register_rest_route('headless-theme/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            // Get menu location from request
+            $location = $request['location'];
+
+            // Get menu locations
+            $locations = get_nav_menu_locations();
+
+            // Check if menu exists in location
+            if (!isset($locations[$location])) {
+                return new WP_Error(
+                    'no_menu',
+                    'No menu found in location: ' . $location,
+                    ['status' => 404]
+                );
+            }
+
+            // Get menu ID
+            $menu_id = $locations[$location];
+
+            // Get menu items
+            $menu_items = wp_get_nav_menu_items($menu_id);
+
+            if (!$menu_items) {
+                return [];
+            }
+
+            // Format menu items
+            return array_map(function($item) {
+                // Convert full URL to path
+                $url = parse_url($item->url, PHP_URL_PATH);
+                $slug = trim($url ?? '', '/');
+
+                return [
+                    'ID' => $item->ID,
+                    'title' => $item->title,
+                    'url' => $item->url,
+                    'slug' => $slug ?: '/', // Convert empty string to '/'
+                    'target' => $item->target,
+                    'order' => $item->menu_order,
+                ];
+            }, $menu_items);
         },
         'permission_callback' => '__return_true'
     ]);
