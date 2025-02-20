@@ -4,13 +4,13 @@
  *
  * */
 function register_custom_endpoints() {
-    register_rest_route('stegetfore-headless-wp/v1', '/settings', [
+    register_rest_route('steget/v1', '/settings', [
         'methods' => 'GET',
         'callback' => 'get_theme_settings',
         'permission_callback' => '__return_true'
     ]);
 
-    register_rest_route('stegetfore-headless-wp/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
+    register_rest_route('steget/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
         'methods' => 'GET',
         'callback' => 'get_menu_by_location',
         'permission_callback' => '__return_true'
@@ -45,7 +45,7 @@ function get_menu_by_location($request) {
 
 add_action('rest_api_init', function() {
     // Test endpoint
-    register_rest_route('stegetfore-headless-wp/v1', '/test', [
+    register_rest_route('steget/v1', '/test', [
         'methods' => 'GET',
         'callback' => function() {
             return [
@@ -58,7 +58,7 @@ add_action('rest_api_init', function() {
     ]);
 
     // Site info endpoint
-    register_rest_route('stegetfore-headless-wp/v1', '/site-info', [
+    register_rest_route('steget/v1', '/site-info', [
         'methods' => 'GET',
         'callback' => function() {
             return [
@@ -73,7 +73,7 @@ add_action('rest_api_init', function() {
     ]);
 
     // Extended posts endpoint
-    register_rest_route('stegetfore-headless-wp/v1', '/posts-extended', [
+    register_rest_route('steget/v1', '/posts-extended', [
         'methods' => 'GET',
         'callback' => function($request) {
             $posts = get_posts([
@@ -163,4 +163,37 @@ add_action('rest_api_init', function() {
             return null;
         }
     ]);
+});
+
+
+add_action('rest_api_init', function() {
+    // Site info endpoint
+    register_rest_route('headless-theme/v1', '/site-info', [
+        'methods' => 'GET',
+        'callback' => function() {
+            return [
+                'name' => get_bloginfo('name'),
+                'description' => get_bloginfo('description')
+            ];
+        },
+        'permission_callback' => '__return_true'
+    ]);
+
+    // Debug endpoint to test API access
+    register_rest_route('headless-theme/v1', '/test', [
+        'methods' => 'GET',
+        'callback' => function() {
+            return [
+                'status' => 'ok',
+                'message' => 'API is working',
+                'time' => current_time('mysql')
+            ];
+        },
+        'permission_callback' => '__return_true'
+    ]);
+});
+
+// Debug helper to log API requests
+add_action('rest_api_init', function() {
+    error_log('REST API request received: ' . $_SERVER['REQUEST_URI']);
 });
