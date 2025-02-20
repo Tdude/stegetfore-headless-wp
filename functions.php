@@ -18,8 +18,8 @@ function headless_theme_setup() {
 
     // Register navigation menus
     register_nav_menus([
-        'primary' => __('Primary Menu', 'headless-theme'),
-        'footer' => __('Footer Menu', 'headless-theme')
+        'primary' => __('Primary Menu', 'steget'),
+        'footer' => __('Footer Menu', 'steget')
     ]);
 }
 add_action('after_setup_theme', 'headless_theme_setup');
@@ -79,7 +79,7 @@ foreach ($required_files as $file) {
 
 // Test REST endpoint
 add_action('rest_api_init', function() {
-    register_rest_route('headless-theme/v1', '/test', [
+    register_rest_route('steget/v1', '/test', [
         'methods' => 'GET',
         'callback' => function() {
             return [
@@ -94,6 +94,6 @@ add_action('rest_api_init', function() {
 // Need a menu
 add_action('after_setup_theme', function() {
     register_nav_menus([
-        'primary' => __('Primary Menu', 'headless-theme')
+        'primary' => __('Primary Menu', 'stegetfore-headless-wp')
     ]);
 });
