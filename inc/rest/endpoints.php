@@ -22,7 +22,7 @@ add_action('rest_api_init', function() {
         'methods' => 'GET',
         'callback' => function() {
             return [
-                'name' => get_bloginfo('name'),
+                'name' => get_option('blogname'),
                 'description' => get_bloginfo('description'),
                 'url' => get_bloginfo('url'),
                 'admin_email' => get_bloginfo('admin_email'),
