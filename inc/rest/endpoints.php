@@ -1,47 +1,7 @@
 <?php
-/*
+/**
  * inc/rest/endpoints.php
- *
- * */
-function register_custom_endpoints() {
-    register_rest_route('steget/v1', '/settings', [
-        'methods' => 'GET',
-        'callback' => 'get_theme_settings',
-        'permission_callback' => '__return_true'
-    ]);
-
-    register_rest_route('steget/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
-        'methods' => 'GET',
-        'callback' => 'get_menu_by_location',
-        'permission_callback' => '__return_true'
-    ]);
-}
-add_action('rest_api_init', 'register_custom_endpoints');
-
-function get_theme_settings() {
-    return [
-        'site_title' => get_bloginfo('name'),
-        'site_description' => get_bloginfo('description'),
-        'logo' => get_custom_logo(),
-        'menu_locations' => get_nav_menu_locations()
-    ];
-}
-
-function get_menu_by_location($request) {
-    $location = $request['location'];
-    $locations = get_nav_menu_locations();
-
-    if (!isset($locations[$location])) {
-        return new WP_Error('no_menu', 'No menu in this location');
-    }
-
-    $menu = wp_get_nav_menu_object($locations[$location]);
-    $menu_items = wp_get_nav_menu_items($menu->term_id);
-
-    return rest_ensure_response($menu_items);
-}
-
-
+ */
 
 add_action('rest_api_init', function() {
     // Test endpoint
@@ -84,7 +44,6 @@ add_action('rest_api_init', function() {
 
             return array_map(function($post) {
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'full');
-
                 return [
                     'id' => $post->ID,
                     'title' => $post->post_title,
@@ -101,16 +60,12 @@ add_action('rest_api_init', function() {
     ]);
 
     // Menu endpoint
-    register_rest_route('headless-theme/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
+    register_rest_route('steget/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
         'methods' => 'GET',
         'callback' => function($request) {
-            // Get menu location from request
             $location = $request['location'];
-
-            // Get menu locations
             $locations = get_nav_menu_locations();
 
-            // Check if menu exists in location
             if (!isset($locations[$location])) {
                 return new WP_Error(
                     'no_menu',
@@ -119,19 +74,14 @@ add_action('rest_api_init', function() {
                 );
             }
 
-            // Get menu ID
             $menu_id = $locations[$location];
-
-            // Get menu items
             $menu_items = wp_get_nav_menu_items($menu_id);
 
             if (!$menu_items) {
                 return [];
             }
 
-            // Format menu items
             return array_map(function($item) {
-                // Convert full URL to path
                 $url = parse_url($item->url, PHP_URL_PATH);
                 $slug = trim($url ?? '', '/');
 
@@ -139,7 +89,7 @@ add_action('rest_api_init', function() {
                     'ID' => $item->ID,
                     'title' => $item->title,
                     'url' => $item->url,
-                    'slug' => $slug ?: '/', // Convert empty string to '/'
+                    'slug' => $slug ?: '/',
                     'target' => $item->target,
                     'order' => $item->menu_order,
                 ];
@@ -163,37 +113,4 @@ add_action('rest_api_init', function() {
             return null;
         }
     ]);
-});
-
-
-add_action('rest_api_init', function() {
-    // Site info endpoint
-    register_rest_route('headless-theme/v1', '/site-info', [
-        'methods' => 'GET',
-        'callback' => function() {
-            return [
-                'name' => get_bloginfo('name'),
-                'description' => get_bloginfo('description')
-            ];
-        },
-        'permission_callback' => '__return_true'
-    ]);
-
-    // Debug endpoint to test API access
-    register_rest_route('headless-theme/v1', '/test', [
-        'methods' => 'GET',
-        'callback' => function() {
-            return [
-                'status' => 'ok',
-                'message' => 'API is working',
-                'time' => current_time('mysql')
-            ];
-        },
-        'permission_callback' => '__return_true'
-    ]);
-});
-
-// Debug helper to log API requests
-add_action('rest_api_init', function() {
-    error_log('REST API request received: ' . $_SERVER['REQUEST_URI']);
 });
