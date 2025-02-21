@@ -69,7 +69,7 @@ function trigger_nextjs_revalidation($post_id) {
     }
 
     // Your Next.js app URL and secret token
-    $nextjs_url = get_option('nextjs_url', 'https://stegetfore.se');
+    $nextjs_url = get_option('nextjs_url', 'https://stegetfore.nu');
     $secret_token = get_option('nextjs_token', '');
 
     // Send revalidation request
