@@ -125,3 +125,9 @@ function nextjs_settings_init() {
     );
 }
 add_action('admin_init', 'nextjs_settings_init');
+
+// If we need to remove styles from plugins
+function headless_theme_dequeue_plugin_styles() {
+    wp_dequeue_style('plugin-style-handle');
+}
+add_action('wp_enqueue_scripts', 'headless_theme_dequeue_plugin_styles', 20);
