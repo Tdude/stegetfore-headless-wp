@@ -31,6 +31,7 @@ add_action('init', 'add_cors_headers');
 // Load theme components
 $required_files = [
     '/inc/post-types/portfolio.php',
+    '/inc/post-types/evaluation.php',
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
     '/inc/admin/theme-options.php'
@@ -131,3 +132,13 @@ function headless_theme_dequeue_plugin_styles() {
     wp_dequeue_style('plugin-style-handle');
 }
 add_action('wp_enqueue_scripts', 'headless_theme_dequeue_plugin_styles', 20);
+
+// For inc/post-types/evaluation.php
+function enqueue_evaluation_scripts() {
+    wp_enqueue_script('evaluation-form', get_template_directory_uri() . '/js/evaluation-form.js', [], '1.0', true);
+    wp_localize_script('evaluation-form', 'wpApiSettings', [
+        'nonce' => wp_create_nonce('wp_rest'),
+        'root' => esc_url_raw(rest_url())
+    ]);
+}
+add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
