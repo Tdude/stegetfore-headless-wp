@@ -120,7 +120,7 @@ add_action('rest_api_init', function() {
 function register_template_choice_rest_field() {
     register_rest_field(
         array('page', 'post'),
-        'template_choice',
+        'template',
         array(
             'get_callback' => 'get_template_choice_rest_field',
             'update_callback' => 'update_template_choice_rest_field',
