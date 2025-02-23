@@ -69,7 +69,7 @@ add_action('rest_api_init', function() {
             if (!isset($locations[$location])) {
                 return new WP_Error(
                     'no_menu',
-                    'No menu found in location: ' . $location,
+                    'Kunde inte hitta en meny på platsen: ' . $location,
                     ['status' => 404]
                 );
             }
@@ -114,3 +114,36 @@ add_action('rest_api_init', function() {
         }
     ]);
 });
+
+
+// Register the template choice meta field for the REST API
+function register_template_choice_rest_field() {
+    register_rest_field(
+        array('page', 'post'),
+        'template_choice',
+        array(
+            'get_callback' => 'get_template_choice_rest_field',
+            'update_callback' => 'update_template_choice_rest_field',
+            'schema' => array(
+                'description' => 'Vald mall för denna sida.',
+                'type' => 'string',
+                'context' => array('view', 'edit'),
+            ),
+        )
+    );
+}
+add_action('rest_api_init', 'register_template_choice_rest_field');
+
+// Callback to retrieve the template choice
+function get_template_choice_rest_field($object, $field_name, $request) {
+    return get_post_meta($object['id'], $field_name, true);
+}
+
+// Callback to update the template choice
+function update_template_choice_rest_field($value, $object, $field_name) {
+    // Update the meta value for the given field name
+    if (!$value || !is_string($value)) {
+        return;
+    }
+    update_post_meta($object->ID, $field_name, sanitize_text_field($value));
+}

@@ -46,9 +46,11 @@ function render_template_choice_meta_box($post) {
 
     // Define available template choices
     $templates = array(
-        'default' => 'Default',
-        'full-width' => 'Full Width',
-        'sidebar' => 'Page with Sidebar',
+        'default' => 'Normalsida',
+        'full-width' => 'Fullbredd',
+        'sidebar' => 'Sida med sidebar',
+        'evaluation' => 'Sida med obschema',
+        'circle-chart' => 'Sida med livshjul',
     );
 
     // Add a nonce field for security
