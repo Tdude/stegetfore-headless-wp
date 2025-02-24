@@ -114,3 +114,56 @@ add_action('rest_api_init', function() {
         }
     ]);
 });
+
+
+
+// Startpage endpoints for fewer requests
+function register_homepage_data_endpoint() {
+    register_rest_route('startpage/v1', '/homepage-data', [
+        'methods' => 'GET',
+        'callback' => 'get_homepage_data',
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'register_homepage_data_endpoint');
+
+function get_homepage_data() {
+    $homepage_id = get_option('page_on_front');
+
+    // Get all homepage meta in one go
+    $hero_data = [
+        'title' => get_post_meta($homepage_id, 'hero_title', true),
+        'intro' => get_post_meta($homepage_id, 'hero_intro', true),
+        'image' => get_post_meta($homepage_id, 'hero_image_id', true) ?
+                  wp_get_attachment_image_src(get_post_meta($homepage_id, 'hero_image_id', true), 'full') : null,
+        'buttons' => json_decode(get_post_meta($homepage_id, 'hero_cta_buttons', true), true) ?: [],
+    ];
+
+    // Featured posts
+    $featured_posts = get_posts([
+        'post_type' => 'post',
+        'meta_key' => 'is_featured',
+        'meta_value' => '1',
+        'posts_per_page' => 6,
+    ]);
+
+    $posts_data = [];
+    foreach ($featured_posts as $post) {
+        $posts_data[] = [
+            'id' => $post->ID,
+            'title' => $post->post_title,
+            'excerpt' => get_the_excerpt($post),
+            'link' => get_permalink($post),
+            'image' => get_the_post_thumbnail_url($post, 'medium'),
+            'date' => get_the_date('c', $post),
+        ];
+    }
+
+    // Similarly get other section data
+
+    return [
+        'hero' => $hero_data,
+        'featured_posts' => $posts_data,
+        // Other sections
+    ];
+}
