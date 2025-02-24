@@ -31,6 +31,7 @@ add_action('send_headers', 'add_cors_headers');
 // Load theme components
 $required_files = [
     '/inc/post-types/portfolio.php',
+    '/inc/post-types/testimonials.php',
     '/inc/post-types/evaluation.php',
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
