@@ -130,7 +130,7 @@ add_action('rest_api_init', 'register_homepage_data_endpoint');
 function get_homepage_data() {
     $homepage_id = get_option('page_on_front');
 
-    // Get all homepage meta in one go
+    // Get hero data
     $hero_data = [
         'title' => get_post_meta($homepage_id, 'hero_title', true),
         'intro' => get_post_meta($homepage_id, 'hero_intro', true),
@@ -139,12 +139,12 @@ function get_homepage_data() {
         'buttons' => json_decode(get_post_meta($homepage_id, 'hero_cta_buttons', true), true) ?: [],
     ];
 
-    // Featured posts
+    // Featured posts - using recent posts instead of meta field for now
     $featured_posts = get_posts([
         'post_type' => 'post',
-        'meta_key' => 'is_featured',
-        'meta_value' => '1',
         'posts_per_page' => 6,
+        'orderby' => 'date',
+        'order' => 'DESC'
     ]);
 
     $posts_data = [];
@@ -159,10 +159,30 @@ function get_homepage_data() {
         ];
     }
 
-    // Return the correct variable names
+    // Get testimonials
+    $testimonials_query = get_posts([
+        'post_type' => 'testimonial',
+        'posts_per_page' => 6,
+        'orderby' => 'date',
+        'order' => 'DESC'
+    ]);
+
+    $testimonials_data = [];
+    foreach ($testimonials_query as $testimonial) {
+        $testimonials_data[] = [
+            'id' => $testimonial->ID,
+            'content' => $testimonial->post_content,
+            'author_name' => get_post_meta($testimonial->ID, 'author_name', true) ?: $testimonial->post_title,
+            'author_position' => get_post_meta($testimonial->ID, 'author_position', true) ?: '',
+            'author_image' => get_the_post_thumbnail_url($testimonial->ID, 'thumbnail')
+        ];
+    }
+
+    // Return all data
     return [
         'hero' => $hero_data,
         'featured_posts' => $posts_data,
+        'featured_posts_title' => 'Nytt från bloggen',
         'cta' => [
           'title' => get_post_meta($homepage_id, 'cta_title', true) ?: '',
           'description' => get_post_meta($homepage_id, 'cta_description', true) ?: '',
@@ -170,6 +190,7 @@ function get_homepage_data() {
           'button_url' => get_post_meta($homepage_id, 'cta_button_url', true) ?: '',
           'background_color' => get_post_meta($homepage_id, 'cta_background_color', true) ?: 'bg-primary',
         ],
-        'testimonials' => [],
+        'testimonials' => $testimonials_data,
+        'testimonials_title' => 'Vad våra klienter säger'
     ];
 }
