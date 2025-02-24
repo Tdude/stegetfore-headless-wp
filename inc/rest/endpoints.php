@@ -159,11 +159,17 @@ function get_homepage_data() {
         ];
     }
 
-    // Similarly get other section data
-
+    // Return the correct variable names
     return [
         'hero' => $hero_data,
         'featured_posts' => $posts_data,
-        // Other sections
+        'cta' => [
+          'title' => get_post_meta($homepage_id, 'cta_title', true) ?: '',
+          'description' => get_post_meta($homepage_id, 'cta_description', true) ?: '',
+          'button_text' => get_post_meta($homepage_id, 'cta_button_text', true) ?: '',
+          'button_url' => get_post_meta($homepage_id, 'cta_button_url', true) ?: '',
+          'background_color' => get_post_meta($homepage_id, 'cta_background_color', true) ?: 'bg-primary',
+        ],
+        'testimonials' => [],
     ];
 }
