@@ -1,4 +1,4 @@
 <?php
-/*
-Template Name: Sidebar Layout
+/**
+* Template Name: Sidebar Layout
 */

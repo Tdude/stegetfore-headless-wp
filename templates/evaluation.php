@@ -1,4 +1,4 @@
 <?php
-/*
-Template Name: Evaluation Page
+/**
+* Template Name: Evaluation Page
 */

@@ -1,8 +1,7 @@
 <?php
 /**
- * inc/meta-fields/register-meta.php
- *
- * */
+* inc/meta-fields/register-meta.php
+*/
 
  // Content type Porrtofolio if we need it
 function register_portfolio_meta_fields() {

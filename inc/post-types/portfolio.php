@@ -1,7 +1,8 @@
 <?php
 /*
  * inc/post/types/portfolio.php
- * */
+ *
+ */
 function register_portfolio_post_type() {
     $labels = [
         'name' => 'Portfolio',

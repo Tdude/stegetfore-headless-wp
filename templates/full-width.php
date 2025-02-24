@@ -1,4 +1,4 @@
 <?php
-/*
-Template Name: Full Width Layout
+/**
+* Template Name: Full Width Layout
 */

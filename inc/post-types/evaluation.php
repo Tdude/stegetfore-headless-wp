@@ -1,5 +1,7 @@
 <?php
-// inc/post-types/evaluation.php
+/**
+ * inc/post-types/evaluation.php
+ */
 // Register custom post type for student evaluation
 function register_evaluation_post_type() {
     register_post_type('student_evaluation', [

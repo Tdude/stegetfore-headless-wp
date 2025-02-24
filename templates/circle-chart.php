@@ -1,4 +1,4 @@
 <?php
-/*
-Template Name: Circle Chart Page
+/**
+* Template Name: Circle Chart Page
 */
