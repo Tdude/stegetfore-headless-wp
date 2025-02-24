@@ -53,10 +53,59 @@ function register_custom_templates($templates) {
     $custom_templates = [
         'templates/full-width.php' => 'Full Width Layout',
         'templates/sidebar.php'    => 'Sidebar Layout',
-        'templates/landing.php'    => 'Startsida (Landing Page)',
+        'templates/landing.php'    => 'Startsida m blogg (Landing Page)',
         'templates/evaluation.php' => 'Obsverktyget (Evaluation)',
-        'templates/circle-chart.php' => 'Cirkeldiagram (Circle Chart)'
+        'templates/circle-chart.php' => 'Cirkeldiagram (Circle Chart)',
+        'templates/homepage.php' => 'Startsidan (Specialinlägg)'
     ];
     return array_merge($templates, $custom_templates);
 }
 add_filter('theme_page_templates', 'register_custom_templates');
+
+
+// Register component specific fields in the theme
+function register_homepage_meta_fields() {
+    // Hero Section
+    register_post_meta('page', 'hero_title', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string',
+    ]);
+
+    register_post_meta('page', 'hero_intro', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string',
+    ]);
+
+    register_post_meta('page', 'hero_image_id', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'integer',
+    ]);
+
+    // For CTA buttons and other repeatable fields, store as JSON
+    register_post_meta('page', 'hero_cta_buttons', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string', // Will store JSON string
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+
+    // Selleri
+    register_post_meta('page', 'selling_points', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+
+    // Testimonials
+    register_post_meta('page', 'testimonials', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+}
+add_action('init', 'register_homepage_meta_fields');

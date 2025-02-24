@@ -7,7 +7,7 @@ function register_evaluation_post_type() {
     register_post_type('student_evaluation', [
         'public' => false,
         'show_ui' => true,
-        'labels' => ['name' => 'Student Evaluations'],
+        'labels' => ['name' => 'OBSverktyget'],
         'supports' => ['title', 'custom-fields']
     ]);
 }
