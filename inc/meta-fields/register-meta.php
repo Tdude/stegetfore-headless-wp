@@ -62,6 +62,16 @@ function register_custom_templates($templates) {
 }
 add_filter('theme_page_templates', 'register_custom_templates');
 
+// Featured posts on the Startpage
+function register_featured_post_meta() {
+    register_post_meta('post', 'is_featured', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'boolean',
+        'default' => false
+    ]);
+}
+add_action('init', 'register_featured_post_meta');
 
 // Register component specific fields in the theme
 function register_homepage_meta_fields() {
