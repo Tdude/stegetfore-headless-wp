@@ -116,7 +116,6 @@ add_action('rest_api_init', function() {
 });
 
 
-
 // Startpage endpoints for fewer requests
 function register_homepage_data_endpoint() {
     register_rest_route('startpage/v1', '/homepage-data', [
@@ -127,16 +126,27 @@ function register_homepage_data_endpoint() {
 }
 add_action('rest_api_init', 'register_homepage_data_endpoint');
 
+
 function get_homepage_data() {
     $homepage_id = get_option('page_on_front');
 
+    // Get featured image from the homepage
+    $featured_image_url = get_the_post_thumbnail_url($homepage_id, 'full');
+
     // Get hero data
     $hero_data = [
-        'title' => get_post_meta($homepage_id, 'hero_title', true),
-        'intro' => get_post_meta($homepage_id, 'hero_intro', true),
+        'title' => get_post_meta($homepage_id, 'hero_title', true) ?: get_the_title($homepage_id),
+        'intro' => get_post_meta($homepage_id, 'hero_intro', true) ?: get_the_excerpt($homepage_id),
         'image' => get_post_meta($homepage_id, 'hero_image_id', true) ?
-                  wp_get_attachment_image_src(get_post_meta($homepage_id, 'hero_image_id', true), 'full') : null,
-        'buttons' => json_decode(get_post_meta($homepage_id, 'hero_cta_buttons', true), true) ?: [],
+                wp_get_attachment_image_src(get_post_meta($homepage_id, 'hero_image_id', true), 'full')[0] :
+                $featured_image_url, // Use featured image as fallback
+        'buttons' => json_decode(get_post_meta($homepage_id, 'hero_cta_buttons', true), true) ?: [
+            [
+                'text' => 'Learn More',
+                'url' => '/about',
+                'style' => 'primary'
+            ]
+        ],
     ];
 
     // Featured posts - using recent posts instead of meta field for now
