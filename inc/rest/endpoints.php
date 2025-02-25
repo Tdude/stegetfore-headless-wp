@@ -59,7 +59,8 @@ add_action('rest_api_init', function() {
         'permission_callback' => '__return_true'
     ]);
 
-    // Menu endpoint
+
+    // Menu endpoint with hierarchical structure
     register_rest_route('steget/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
         'methods' => 'GET',
         'callback' => function($request) {
@@ -81,19 +82,51 @@ add_action('rest_api_init', function() {
                 return [];
             }
 
-            return array_map(function($item) {
+            // First, let's prepare all items with their basic info
+            $all_items = [];
+            foreach ($menu_items as $item) {
                 $url = parse_url($item->url, PHP_URL_PATH);
                 $slug = trim($url ?? '', '/');
 
-                return [
+                $all_items[$item->ID] = [
                     'ID' => $item->ID,
                     'title' => $item->title,
                     'url' => $item->url,
                     'slug' => $slug ?: '/',
                     'target' => $item->target,
                     'order' => $item->menu_order,
+                    'parent' => $item->menu_item_parent,
+                    'children' => []
                 ];
-            }, $menu_items);
+            }
+
+            // Now build the tree
+            $menu_tree = [];
+            foreach ($all_items as $id => $item) {
+                // If it's a top-level item
+                if (empty($item['parent']) || $item['parent'] == 0) {
+                    $menu_tree[] = &$all_items[$id];
+                } else {
+                    // It's a child item
+                    if (isset($all_items[$item['parent']])) {
+                        $all_items[$item['parent']]['children'][] = &$all_items[$id];
+                    }
+                }
+            }
+
+            // Clean up - remove parent property since it's no longer needed
+            $clean_items = function(&$items) use (&$clean_items) {
+                foreach ($items as &$item) {
+                    unset($item['parent']);
+                    if (!empty($item['children'])) {
+                        $clean_items($item['children']);
+                    }
+                }
+            };
+
+            $clean_items($menu_tree);
+
+            return $menu_tree;
         },
         'permission_callback' => '__return_true'
     ]);
