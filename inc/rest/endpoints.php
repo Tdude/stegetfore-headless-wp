@@ -149,7 +149,7 @@ function get_homepage_data() {
         ],
     ];
 
-    // Featured posts - using recent posts instead of meta field for now
+    // Featured posts - using meta field
     $featured_posts = get_posts([
         'post_type' => 'post',
         'posts_per_page' => 6,
