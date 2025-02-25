@@ -6,7 +6,11 @@ export default async function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8">
+<<<<<<< HEAD
       <h1 className="font-heading text-4xl font-bold tracking-tighter mb-8">Latest Posts, huh?</h1>
+=======
+      <h1 className="font-heading text-4xl font-bold tracking-tighter mb-8">Latest Posts</h1>
+>>>>>>> refs/remotes/origin/main
       <div className="grid gap-6">
         {posts.map((post) => (
           <article key={post.id} className="border p-4 rounded-lg">
