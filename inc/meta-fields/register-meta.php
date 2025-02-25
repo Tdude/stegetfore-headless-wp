@@ -102,7 +102,7 @@ function register_homepage_meta_fields() {
         'sanitize_callback' => 'sanitize_text_field',
     ]);
 
-    // Selleri
+    // Selling points
     register_post_meta('page', 'selling_points', [
         'show_in_rest' => true,
         'single' => true,
