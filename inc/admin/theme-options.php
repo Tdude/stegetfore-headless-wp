@@ -71,6 +71,14 @@ function homepage_meta_boxes() {
         'normal',
         'high'
     );
+    add_meta_box(
+        'homepage_featured_section',
+        'Featured posts',
+        'render_featured_metabox',
+        'post',
+        'normal',
+        'high'
+    );
 
     // Add more meta boxes for other sections
 }
