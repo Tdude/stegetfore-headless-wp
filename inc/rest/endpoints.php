@@ -142,8 +142,8 @@ function get_homepage_data() {
                 $featured_image_url, // Use featured image as fallback
         'buttons' => json_decode(get_post_meta($homepage_id, 'hero_cta_buttons', true), true) ?: [
             [
-                'text' => 'Learn More',
-                'url' => '/about',
+                'text' => 'Upptäck mer',
+                'url' => '/om-oss',
                 'style' => 'primary'
             ]
         ],

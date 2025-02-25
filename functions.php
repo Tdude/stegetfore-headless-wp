@@ -143,3 +143,9 @@ function enqueue_evaluation_scripts() {
     ]);
 }
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
+
+
+// WPCF7 allow for API access
+add_filter('wpcf7_allow_form_access', function($allow, $post_id) {
+    return true;
+}, 10, 2);
