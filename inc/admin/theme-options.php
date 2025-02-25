@@ -71,14 +71,6 @@ function homepage_meta_boxes() {
         'normal',
         'high'
     );
-    add_meta_box(
-        'homepage_featured_section',
-        'Featured posts',
-        'render_featured_metabox',
-        'post',
-        'normal',
-        'high'
-    );
 
     // Add more meta boxes for other sections
 }
@@ -104,19 +96,61 @@ function render_hero_metabox($post) {
         <input type="text" id="hero_title" name="hero_title" value="<?php echo esc_attr($hero_title); ?>"
             class="widefat">
     </p>
-    <!-- More fields here -->
+    <p>
+        <label for="hero_intro">Hero Intro:</label>
+        <textarea id="hero_intro" name="hero_intro" class="widefat"><?php echo esc_textarea($hero_intro); ?></textarea>
+    </p>
+    <p>
+        <label for="hero_image_id">Hero Image:</label>
+        <input type="hidden" id="hero_image_id" name="hero_image_id" value="<?php echo esc_attr($hero_image_id); ?>">
+        <button class="button button-primary upload-hero-image">Upload Image</button>
+        <?php if ($hero_image_id) : ?>
+        <img src="<?php echo wp_get_attachment_url($hero_image_id); ?>" alt="Hero Image"
+            style="max-width: 100px; margin-top: 10px;">
+        <?php endif; ?>
+    </p>
+    <h3>CTA Buttons</h3>
+    <div id="cta_buttons_wrapper">
+        <?php if (!empty($cta_buttons)) : ?>
+        <?php foreach ($cta_buttons as $index => $button) : ?>
+        <div class="cta-button-field">
+            <input type="text" name="cta_button_text[]" value="<?php echo esc_attr($button['text']); ?>"
+                placeholder="Button Text">
+            <input type="url" name="cta_button_url[]" value="<?php echo esc_url($button['url']); ?>"
+                placeholder="Button URL">
+            <select name="cta_button_style[]">
+                <option value="primary" <?php selected($button['style'], 'primary'); ?>>Primary</option>
+                <option value="secondary" <?php selected($button['style'], 'secondary'); ?>>Secondary</option>
+            </select>
+            <button class="button button-danger remove-cta-button">Remove</button>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
+        <button class="button button-primary add-cta-button">Add Button</button>
+    </div>
 </div>
 <?php
-
     // Add nonce for security
     wp_nonce_field('save_homepage_meta', 'homepage_meta_nonce');
 }
 
+
 function save_homepage_meta($post_id) {
     // Security checks, permissions, etc.
+    if (!isset($_POST['homepage_meta_nonce']) || !wp_verify_nonce($_POST['homepage_meta_nonce'], 'save_homepage_meta')) {
+        return;
+    }
 
     if (isset($_POST['hero_title'])) {
         update_post_meta($post_id, 'hero_title', sanitize_text_field($_POST['hero_title']));
+    }
+
+    if (isset($_POST['hero_intro'])) {
+        update_post_meta($post_id, 'hero_intro', sanitize_textarea_field($_POST['hero_intro']));
+    }
+
+    if (isset($_POST['hero_image_id'])) {
+        update_post_meta($post_id, 'hero_image_id', sanitize_text_field($_POST['hero_image_id']));
     }
 
     // Handle repeatable fields (CTA buttons)
@@ -133,7 +167,5 @@ function save_homepage_meta($post_id) {
         }
         update_post_meta($post_id, 'hero_cta_buttons', json_encode($buttons));
     }
-
-    // Save other fields similarly
 }
 add_action('save_post', 'save_homepage_meta');
