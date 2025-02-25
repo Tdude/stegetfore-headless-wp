@@ -5,6 +5,15 @@
 
 if (!defined('ABSPATH')) exit;
 
+// For admin
+/*
+function enqueue_admin_scripts() {
+    wp_enqueue_script('admin-js', get_template_directory_uri() . '/admin.js', array('jquery'), '1.0', true);
+}
+add_action('admin_enqueue_scripts', 'enqueue_admin_scripts');
+*/
+
+
 // Theme Setup
 function headless_theme_setup() {
     add_theme_support('title-tag');
@@ -144,15 +153,6 @@ function enqueue_evaluation_scripts() {
 }
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
 
-<<<<<<< HEAD
-// For admin AJAX to work I guess
-function enqueue_admin_scripts() {
-    wp_enqueue_script('admin-js', get_template_directory_uri() . '/admin.js', array('jquery'), '1.0', true);
-}
-add_action('admin_enqueue_scripts', 'enqueue_admin_scripts');
-
-=======
->>>>>>> refs/remotes/origin/main
 
 // WPCF7 allow for API access
 add_filter('wpcf7_allow_form_access', function($allow, $post_id) {
