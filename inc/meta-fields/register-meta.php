@@ -3,7 +3,7 @@
 * inc/meta-fields/register-meta.php
 */
 
- // Content type Porrtofolio if we need it
+ // Content type Porrtofolio NOT ACTIVE!
 function register_portfolio_meta_fields() {
     register_post_meta('portfolio', 'project_url', [
         'show_in_rest' => true,
