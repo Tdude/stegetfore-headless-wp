@@ -154,7 +154,7 @@ function enqueue_evaluation_scripts() {
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
 
 
-// WPCF7 allow for API access
+// WPCF7 allow for API access (NOT SURE IT WORKS)
 add_filter('wpcf7_allow_form_access', function($allow, $post_id) {
     return true;
 }, 10, 2);
