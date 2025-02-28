@@ -2,16 +2,17 @@
 /** inc/rest/wpcf7-endpoints.php
  * Custom REST API endpoints for Contact Form 7
  */
+// Register the custom WPCF7 endpoints
 function register_wpcf7_endpoints() {
     // Get form structure endpoint
-    register_rest_route('headless/v1', '/cf7/form/(?P<id>[\w-]+)', array(
+    register_rest_route('steget/v1', '/cf7/form/(?P<id>[\w-]+)', array(
         'methods' => 'GET',
         'callback' => 'get_cf7_form_data',
         'permission_callback' => '__return_true',
     ));
 
     // Submit form endpoint
-    register_rest_route('headless/v1', '/cf7/submit/(?P<id>[\w-]+)', array(
+    register_rest_route('steget/v1', '/cf7/submit/(?P<id>[\w-]+)', array(
         'methods' => 'POST',
         'callback' => 'submit_cf7_form',
         'permission_callback' => '__return_true',
@@ -63,12 +64,22 @@ function get_cf7_form_data($request) {
         );
 
         // Extract label from form HTML (this is a bit hacky but necessary)
-        preg_match('/\<label\>(.*?)' . $tag['name'] . '.*?\<\/label\>/s', $properties['form'], $label_matches);
+        $pattern = '/\<label[^>]*>(.*?)' . preg_quote($tag['name'], '/') . '.*?\<\/label\>/s';
+        preg_match($pattern, $properties['form'], $label_matches);
+
         if (!empty($label_matches)) {
             $label = strip_tags($label_matches[0]);
             $label = preg_replace('/\s+/', ' ', $label);
             $label = trim(str_replace($tag['name'], '', $label));
             $field['labels'][] = $label;
+        } else {
+            // Try an alternative approach for labels
+            preg_match('/\<label[^>]*>(.*?)\<\/label\>/s', $properties['form'], $general_label_matches);
+            if (!empty($general_label_matches) && strpos($general_label_matches[0], $tag['name']) !== false) {
+                $label = strip_tags($general_label_matches[0]);
+                $label = preg_replace('/\s+/', ' ', $label);
+                $field['labels'][] = trim($label);
+            }
         }
 
         $form_fields[] = $field;
@@ -89,10 +100,18 @@ function get_cf7_form_data($request) {
  * Submit Contact Form 7 form
  */
 function submit_cf7_form($request) {
-    $form_id = $request['id'];
+    // Check if CF7 is active in WP
+    if (!class_exists('WPCF7_ContactForm')) {
+        return new WP_Error(
+            'cf7_not_active',
+            'Contact Form 7 plugin is not active',
+            array('status' => 500)
+        );
+    }
 
-    // Check if the form exists
+    $form_id = $request['id'];
     $form = wpcf7_contact_form($form_id);
+
     if (!$form) {
         return new WP_Error(
             'form_not_found',
@@ -101,18 +120,10 @@ function submit_cf7_form($request) {
         );
     }
 
-    // Get form submission data
-    $submission = WPCF7_Submission::get_instance();
-    if (!$submission) {
-        // Create a submission
-        $submission = WPCF7_Submission::get_instance(
-            array(
-                'skip_mail' => false,
-            )
-        );
-    }
+    // Get posted data
+    $data = $request->get_params();
 
-    // Process the submission
+    // Submit the form using CF7's built-in method
     $result = $form->submit();
 
     // Format the response
@@ -121,16 +132,17 @@ function submit_cf7_form($request) {
         'message' => $result['message'],
     );
 
-    // Add validation errors if any
     if (isset($result['invalid_fields']) && !empty($result['invalid_fields'])) {
-        $response['invalidFields'] = array();
-
-        foreach ($result['invalid_fields'] as $field_name => $field_error) {
-            $response['invalidFields'][] = array(
-                'field' => $field_name,
-                'message' => $field_error['reason'],
-            );
-        }
+        $response['invalidFields'] = array_map(
+            function($field_name, $field_error) {
+                return array(
+                    'field' => $field_name,
+                    'message' => $field_error['reason'],
+                );
+            },
+            array_keys($result['invalid_fields']),
+            array_values($result['invalid_fields'])
+        );
     }
 
     return rest_ensure_response($response);
