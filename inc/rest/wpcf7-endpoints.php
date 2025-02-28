@@ -2,8 +2,6 @@
 /** inc/rest/wpcf7-endpoints.php
  * Custom REST API endpoints for Contact Form 7
  */
-
-// Register the custom WPCF7 endpoints
 function register_wpcf7_endpoints() {
     // Get form structure endpoint
     register_rest_route('headless/v1', '/cf7/form/(?P<id>[\w-]+)', array(
@@ -65,9 +63,9 @@ function get_cf7_form_data($request) {
         );
 
         // Extract label from form HTML (this is a bit hacky but necessary)
-        preg_match('/\<label\>(.*?)\<\/label\>/s', $properties['form'], $label_matches);
-        if (!empty($label_matches) && strpos($label_matches[0], $tag['name']) !== false) {
-            $label = strip_tags($label_matches[1]);
+        preg_match('/\<label\>(.*?)' . $tag['name'] . '.*?\<\/label\>/s', $properties['form'], $label_matches);
+        if (!empty($label_matches)) {
+            $label = strip_tags($label_matches[0]);
             $label = preg_replace('/\s+/', ' ', $label);
             $label = trim(str_replace($tag['name'], '', $label));
             $field['labels'][] = $label;

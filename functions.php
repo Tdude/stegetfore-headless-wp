@@ -154,7 +154,11 @@ function enqueue_evaluation_scripts() {
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
 
 
-// WPCF7 allow for API access (NOT SURE IT WORKS)
-add_filter('wpcf7_allow_form_access', function($allow, $post_id) {
-    return true;
-}, 10, 2);
+/**
+ * Include Contact Form 7 custom endpoints
+ */
+if ( defined( 'WPCF7_VERSION' ) ) {
+    require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
+}
+
+require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
