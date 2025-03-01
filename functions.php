@@ -161,4 +161,9 @@ if ( defined( 'WPCF7_VERSION' ) ) {
     require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
 }
 
+// Include simple CF7 endpoint
+if (defined('WPCF7_VERSION')) {
+    require_once get_template_directory() . '/inc/rest/simple-cf7-endpoint.php';
+}
+
 require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
