@@ -30,11 +30,44 @@ function headless_theme_setup() {
 add_action('after_setup_theme', 'headless_theme_setup');
 
 // CORS header for REST API
+// Update this function in your functions.php
 function add_cors_headers() {
-    header("Access-Control-Allow-Origin: *");
+    // Add Access-Control-Allow-Origin header
+    $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+
+    // You may want to limit this to specific origins in production
+    // For development, allow localhost
+    if ($http_origin == "http://localhost:3000" ||
+        $http_origin == "https://localhost:3000" ||
+        strpos($http_origin, 'stegetfore.nu') !== false) {
+        header("Access-Control-Allow-Origin: $http_origin");
+    } else {
+        header("Access-Control-Allow-Origin: *");
+    }
+
+    // Handle preflight OPTIONS requests
+    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type");
+        header("Access-Control-Max-Age: 86400"); // Cache preflight for 24 hours
+        exit(0);
+    }
+
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
     header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
+    header("Access-Control-Allow-Credentials: true");
 }
+
+// Make sure this function is called for REST requests
+add_action('rest_api_init', function() {
+    // Remove the previous send_headers action if it exists
+    remove_action('send_headers', 'add_cors_headers');
+
+    // Call our CORS function before processing REST requests
+    add_cors_headers();
+}, 15);
+
+// Keep the original hook for non-REST requests
 add_action('send_headers', 'add_cors_headers');
 
 // Load theme components
@@ -155,10 +188,96 @@ add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
 
 
 /**
- * Include Contact Form 7 custom endpoints
+ * Included Contact Form 7 custom endpoints to functions.php
  */
 if ( defined( 'WPCF7_VERSION' ) ) {
     require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
 }
+/*
+add_action('init', function() {
+    error_log('WPCF7_VERSION defined: ' . (defined('WPCF7_VERSION') ? 'YES - ' . WPCF7_VERSION : 'NO'));
+});
+*/
 
-require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
+
+
+/**
+ * This is the simplified approach for CF7 integration
+ */
+add_filter('rest_prepare_page', function($response, $post, $request) {
+    $data = $response->get_data();
+
+    // Process only if we have content
+    if (isset($data['content']['rendered'])) {
+        // Check for CF7 shortcode
+        if (has_shortcode($post->post_content, 'contact-form-7') || strpos($data['content']['rendered'], 'class="wpcf7') !== false) {
+            // Extract form ID
+            $form_id = null;
+
+            // Try to get from data attribute or shortcode
+            if (preg_match('/data-wpcf7-id="(\d+)"/', $data['content']['rendered'], $matches)) {
+                $form_id = $matches[1];
+            } elseif (preg_match('/\[contact-form-7\s+id="(\d+)"/', $post->post_content, $matches)) {
+                $form_id = $matches[1];
+            }
+
+            // If form ID found, add it to the response
+            if ($form_id) {
+                // Add it as a direct property in the API response
+                $data['cf7_form_id'] = $form_id;
+
+                // Remove the CF7 HTML from the content
+                $data['content']['rendered'] = preg_replace('/<div[^>]*class="[^"]*wpcf7[^"]*"[^>]*>[\s\S]*?<\/div>(?:\s*<div[^>]*class="[^"]*wpcf7-response-output[^"]*"[^>]*>[\s\S]*?<\/div>)?/s', '', $data['content']['rendered']);
+
+                // Also remove any shortcodes
+                $data['content']['rendered'] = str_replace('[contact-form-7 id="' . $form_id . '"', '', $data['content']['rendered']);
+            }
+
+            $response->set_data($data);
+        }
+    }
+
+    return $response;
+}, 10, 3);
+
+// Register form ID in REST API for easier access
+add_action('rest_api_init', function() {
+    register_rest_field('page', 'cf7_form_id', array(
+        'get_callback' => function($post) {
+            $content = get_post_field('post_content', $post['id']);
+
+            // Check for CF7 shortcode
+            if (has_shortcode($content, 'contact-form-7')) {
+                $pattern = '/\[contact-form-7\s+id="(\d+)"/';
+                if (preg_match($pattern, $content, $matches)) {
+                    return $matches[1];
+                }
+            }
+
+            return null;
+        },
+        'schema' => array(
+            'type' => 'string',
+            'description' => 'Contact Form 7 ID if present on the page',
+        ),
+    ));
+});
+
+
+// Add support for our custom headless CF7 shortcode
+add_shortcode('headless-cf7', function($atts) {
+    $atts = shortcode_atts(array(
+        'id' => '',
+    ), $atts);
+
+    if (empty($atts['id'])) {
+        return '';
+    }
+
+    // Just return a marker div that React can use to inject the form
+    return sprintf(
+        '<div id="headless-cf7-%s" class="headless-cf7-placeholder" data-form-id="%s"></div>',
+        esc_attr($atts['id']),
+        esc_attr($atts['id'])
+    );
+});
