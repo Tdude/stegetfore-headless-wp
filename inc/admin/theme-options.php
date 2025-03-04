@@ -2,43 +2,106 @@
 /*
 * inc/admin/theme-options.php
 */
-function headless_theme_options_page() {
-    add_menu_page(
+
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
+/**
+ * Add theme options page to the admin menu
+ */
+function steget_add_theme_options_page() {
+    add_theme_page(
         'Theme Options',
         'Theme Options',
         'manage_options',
-        'headless-theme-options',
-        'render_theme_options_page',
-        'dashicons-admin-generic'
+        'steget-theme-options',
+        'steget_render_theme_options_page'
     );
 }
-add_action('admin_menu', 'headless_theme_options_page');
+add_action('admin_menu', 'steget_add_theme_options_page');
 
-function render_theme_options_page() {
-    if (isset($_POST['headless_mode'])) {
-        update_option('headless_mode_enabled', $_POST['headless_mode'] === 'on');
-    }
 
-    $headless_mode = get_option('headless_mode_enabled');
+
+/**
+ * Render the theme options page
+ */
+function steget_render_theme_options_page() {
     ?>
 <div class="wrap">
-    <h1>Theme Options</h1>
-    <form method="post">
-        <table class="form-table">
-            <tr>
-                <th scope="row">Headless Mode</th>
-                <td>
-                    <label>
-                        <input type="checkbox" name="headless_mode" <?php checked($headless_mode); ?>>
-                        Enable headless mode
-                    </label>
-                </td>
-            </tr>
-        </table>
+    <h1><?php echo get_admin_page_title(); ?></h1>
+
+    <?php settings_errors(); ?>
+
+    <h2 class="nav-tab-wrapper">
+        <a href="#homepage-tab" class="nav-tab nav-tab-active">Hemsida</a>
+        <a href="#general-tab" class="nav-tab">Allmänt</a>
+        <!-- Other tabs -->
+    </h2>
+
+    <form method="post" action="options.php">
+        <?php
+            settings_fields('steget_theme_options');
+            do_settings_sections('steget_theme_options');
+            ?>
+
+        <div id="homepage-tab" class="tab-content">
+            <?php steget_render_homepage_tab(); ?>
+        </div>
+
+        <div id="general-tab" class="tab-content" style="display:none;">
+            <?php steget_render_general_tab(); ?>
+        </div>
+
         <?php submit_button(); ?>
     </form>
 </div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Tab switching logic
+    $('.nav-tab').on('click', function(e) {
+        e.preventDefault();
+        var target = $(this).attr('href');
+
+        // Update tabs
+        $('.nav-tab').removeClass('nav-tab-active');
+        $(this).addClass('nav-tab-active');
+
+        // Update content
+        $('.tab-content').hide();
+        $(target).show();
+    });
+});
+</script>
 <?php
+}
+
+/**
+ * Render the homepage options tab
+ */
+function steget_render_homepage_tab() {
+    // Hero section - use the theme options version
+    steget_render_hero_section_options();
+
+    // Featured posts section
+    steget_render_featured_posts_section();
+
+    // New sections
+    steget_render_selling_points_section();
+    steget_render_stats_section();
+    steget_render_gallery_section();
+
+    // CTA section
+    steget_render_cta_section();
+}
+
+/**
+ * Render the general options tab
+ */
+function steget_render_general_tab() {
+    // General settings content
+    echo('PIRUM PARUM TEST');
 }
 
 
@@ -66,7 +129,7 @@ function homepage_meta_boxes() {
     add_meta_box(
         'homepage_hero_section',
         'Hero Section',
-        'render_hero_metabox',
+        'steget_render_hero_section',
         'page',
         'normal',
         'high'
@@ -76,7 +139,53 @@ function homepage_meta_boxes() {
 }
 add_action('add_meta_boxes', 'homepage_meta_boxes');
 
-function render_hero_metabox($post) {
+/**
+ * Render hero section for theme options
+ */
+function steget_render_hero_section_options() {
+    $hero_title = get_option('steget_hero_title', '');
+    $hero_subtitle = get_option('steget_hero_subtitle', '');
+    $hero_image = get_option('steget_hero_image', '');
+    $hero_buttons = get_option('steget_hero_buttons', array());
+
+    ?>
+<div class="steget-admin-block">
+    <h3>Hero Section</h3>
+
+    <table class="form-table">
+        <tr>
+            <th scope="row">Title</th>
+            <td>
+                <input type="text" name="steget_hero_title" value="<?php echo esc_attr($hero_title); ?>"
+                    class="regular-text" />
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">Subtitle</th>
+            <td>
+                <textarea name="steget_hero_subtitle" class="large-text"
+                    rows="3"><?php echo esc_textarea($hero_subtitle); ?></textarea>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">Image URL</th>
+            <td>
+                <input type="text" name="steget_hero_image" value="<?php echo esc_attr($hero_image); ?>"
+                    class="regular-text" />
+                <button type="button" class="button upload-image">Upload</button>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Hero buttons could go here -->
+</div>
+<?php
+}
+
+/**
+ * Render hero section for meta box
+ */
+function steget_render_hero_section($post) {
     // Only show for homepage
     if ($post->ID != get_option('page_on_front')) {
         echo '<p>These settings only apply to the homepage.</p>';
@@ -169,3 +278,55 @@ function save_homepage_meta($post_id) {
     }
 }
 add_action('save_post', 'save_homepage_meta');
+
+/**
+ * Register hero section settings
+ */
+function steget_register_hero_settings() {
+    register_setting('steget_theme_options', 'steget_hero_title', 'sanitize_text_field');
+    register_setting('steget_theme_options', 'steget_hero_subtitle', 'sanitize_text_field');
+    register_setting('steget_theme_options', 'steget_hero_image', 'esc_url_raw');
+    register_setting('steget_theme_options', 'steget_hero_buttons', 'steget_sanitize_hero_buttons');
+}
+add_action('admin_init', 'steget_register_hero_settings');
+
+/**
+ * Sanitize hero buttons array
+ */
+function steget_sanitize_hero_buttons($input) {
+    if (!is_array($input)) {
+        return array();
+    }
+
+    $sanitized_input = array();
+
+    foreach ($input as $button) {
+        if (empty($button['text'])) {
+            continue;
+        }
+
+        $sanitized_button = array(
+            'text' => sanitize_text_field($button['text']),
+            'url' => esc_url_raw($button['url']),
+            'style' => in_array($button['style'], array('primary', 'secondary', 'outline'))
+                ? $button['style'] : 'primary'
+        );
+
+        $sanitized_input[] = $sanitized_button;
+    }
+
+    return $sanitized_input;
+}
+
+/**
+ * Add placeholder functions for the other sections so they don't cause errors
+ */
+function steget_render_featured_posts_section() {
+    // Placeholder until you create the actual function
+    echo '<div class="steget-admin-block"><h3>Featured Posts Section</h3><p>This section will be implemented soon.</p></div>';
+}
+
+function steget_render_cta_section() {
+    // Placeholder until you create the actual function
+    echo '<div class="steget-admin-block"><h3>CTA Section</h3><p>This section will be implemented soon.</p></div>';
+}
