@@ -164,7 +164,6 @@ add_action('rest_api_init', 'register_homepage_data_endpoint');
 
 
 
-
 function get_homepage_data() {
     $homepage_id = get_option('page_on_front');
 
@@ -199,10 +198,18 @@ function get_homepage_data() {
     foreach ($featured_posts as $post) {
         $posts_data[] = [
             'id' => $post->ID,
-            'title' => $post->post_title,
-            'excerpt' => get_the_excerpt($post),
-            'link' => get_permalink($post),
-            'image' => get_the_post_thumbnail_url($post, 'medium'),
+            'title' => [
+                'rendered' => $post->post_title
+            ],
+            'excerpt' => [
+                'rendered' => get_the_excerpt($post)
+            ],
+            'content' => [
+                'rendered' => $post->post_content
+            ],
+            'slug' => $post->post_name,
+            'featured_image_url' => get_the_post_thumbnail_url($post, 'full'),
+            'categories' => wp_get_post_categories($post->ID),
             'date' => get_the_date('c', $post),
         ];
     }
@@ -226,32 +233,61 @@ function get_homepage_data() {
         ];
     }
 
-    // Get data from the new features
-    $selling_points_data = steget_get_selling_points_data();
-    $stats_data = steget_get_stats_data();
-    $gallery_data = steget_get_gallery_data();
+    // Get the new features data
+    // Check if these functions exist before calling them
+    $selling_points_data = function_exists('steget_get_selling_points_data') ? steget_get_selling_points_data() : [
+        'title' => 'Varför välja oss',
+        'points' => []
+    ];
+
+    $stats_data = function_exists('steget_get_stats_data') ? steget_get_stats_data() : [
+        'title' => 'Vårt arbete i siffror',
+        'subtitle' => 'Bakom varje siffra finns ett barn.',
+        'background_color' => 'bg-muted/30',
+        'stats' => []
+    ];
+
+    $gallery_data = function_exists('steget_get_gallery_data') ? steget_get_gallery_data() : [
+        'title' => 'Vårt Galleri',
+        'items' => []
+    ];
+
+    // Get categories for the posts
+    $categories = get_categories(['hide_empty' => false]);
+    $categories_data = [];
+    foreach ($categories as $category) {
+        $categories_data[$category->term_id] = [
+            'id' => $category->term_id,
+            'name' => $category->name,
+            'slug' => $category->slug
+        ];
+    }
 
     // Return all data
     return [
         'hero' => $hero_data,
         'featured_posts' => $posts_data,
-        'featured_posts_title' => 'I fokus',
+        'featured_posts_title' => 'Nytt från bloggen',
+        'categories' => $categories_data,
         'cta' => [
-          'title' => get_post_meta($homepage_id, 'cta_title', true) ?: '',
-          'description' => get_post_meta($homepage_id, 'cta_description', true) ?: '',
-          'button_text' => get_post_meta($homepage_id, 'cta_button_text', true) ?: '',
-          'button_url' => get_post_meta($homepage_id, 'cta_button_url', true) ?: '',
-          'background_color' => get_post_meta($homepage_id, 'cta_background_color', true) ?: 'bg-primary',
+            'title' => get_post_meta($homepage_id, 'cta_title', true) ?: '',
+            'description' => get_post_meta($homepage_id, 'cta_description', true) ?: '',
+            'button_text' => get_post_meta($homepage_id, 'cta_button_text', true) ?: '',
+            'button_url' => get_post_meta($homepage_id, 'cta_button_url', true) ?: '',
+            'background_color' => get_post_meta($homepage_id, 'cta_background_color', true) ?: 'bg-primary',
         ],
         'testimonials' => $testimonials_data,
         'testimonials_title' => 'Vad våra klienter säger',
-        // Add the new sections
+
+        // New sections data
         'selling_points' => $selling_points_data['points'],
         'selling_points_title' => $selling_points_data['title'],
+
         'stats' => $stats_data['stats'],
         'stats_title' => $stats_data['title'],
         'stats_subtitle' => $stats_data['subtitle'],
         'stats_background_color' => $stats_data['background_color'],
+
         'gallery' => $gallery_data['items'],
         'gallery_title' => $gallery_data['title']
     ];
