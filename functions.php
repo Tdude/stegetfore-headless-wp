@@ -70,6 +70,7 @@ add_action('rest_api_init', function() {
 // Keep the original hook for non-REST requests
 add_action('send_headers', 'add_cors_headers');
 
+
 // Load theme components
 $required_files = [
     '/inc/post-types/portfolio.php',
@@ -77,7 +78,11 @@ $required_files = [
     '/inc/post-types/evaluation.php',
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
-    '/inc/admin/theme-options.php'
+    '/inc/admin/theme-options.php',
+    // Feature files
+    '/inc/features/stats.php',
+    '/inc/features/selling-points.php',
+    '/inc/features/gallery.php'
 ];
 
 foreach ($required_files as $file) {
@@ -87,7 +92,20 @@ foreach ($required_files as $file) {
     }
 }
 
-add_filter('show_admin_bar', '__return_true');
+// Handle admin scripts for repeatable fields
+function steget_admin_scripts() {
+    $screen = get_current_screen();
+
+    // Only load on the theme options page
+    if ($screen && strpos($screen->id, 'steget-theme-options') !== false) {
+        wp_enqueue_script('steget-admin-js', get_template_directory_uri() . '/js/admin.js', array('jquery'), '1.0', true);
+        wp_enqueue_style('steget-admin-css', get_template_directory_uri() . '/css/admin.css');
+
+        // For media uploader in gallery
+        wp_enqueue_media();
+    }
+}
+add_action('admin_enqueue_scripts', 'steget_admin_scripts');
 
 
 // Caching

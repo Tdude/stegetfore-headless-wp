@@ -2,6 +2,9 @@
 /**
  * inc/rest/endpoints.php
  */
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 add_action('rest_api_init', function() {
     // Test endpoint
@@ -160,6 +163,8 @@ function register_homepage_data_endpoint() {
 add_action('rest_api_init', 'register_homepage_data_endpoint');
 
 
+
+
 function get_homepage_data() {
     $homepage_id = get_option('page_on_front');
 
@@ -221,11 +226,16 @@ function get_homepage_data() {
         ];
     }
 
+    // Get data from the new features
+    $selling_points_data = steget_get_selling_points_data();
+    $stats_data = steget_get_stats_data();
+    $gallery_data = steget_get_gallery_data();
+
     // Return all data
     return [
         'hero' => $hero_data,
         'featured_posts' => $posts_data,
-        'featured_posts_title' => 'Nytt från bloggen',
+        'featured_posts_title' => 'I fokus',
         'cta' => [
           'title' => get_post_meta($homepage_id, 'cta_title', true) ?: '',
           'description' => get_post_meta($homepage_id, 'cta_description', true) ?: '',
@@ -234,6 +244,15 @@ function get_homepage_data() {
           'background_color' => get_post_meta($homepage_id, 'cta_background_color', true) ?: 'bg-primary',
         ],
         'testimonials' => $testimonials_data,
-        'testimonials_title' => 'Vad våra klienter säger'
+        'testimonials_title' => 'Vad våra klienter säger',
+        // Add the new sections
+        'selling_points' => $selling_points_data['points'],
+        'selling_points_title' => $selling_points_data['title'],
+        'stats' => $stats_data['stats'],
+        'stats_title' => $stats_data['title'],
+        'stats_subtitle' => $stats_data['subtitle'],
+        'stats_background_color' => $stats_data['background_color'],
+        'gallery' => $gallery_data['items'],
+        'gallery_title' => $gallery_data['title']
     ];
 }
