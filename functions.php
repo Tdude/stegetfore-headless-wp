@@ -41,6 +41,7 @@ function add_cors_headers() {
         $http_origin == "https://localhost:3000" ||
         strpos($http_origin, 'stegetfore.nu') !== false) {
         header("Access-Control-Allow-Origin: $http_origin");
+        header("Access-Control-Allow-Credentials: true");
     } else {
         header("Access-Control-Allow-Origin: *");
     }
@@ -55,13 +56,12 @@ function add_cors_headers() {
 
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
     header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
-    header("Access-Control-Allow-Credentials: true");
 }
 
 // Make sure this function is called for REST requests
 add_action('rest_api_init', function() {
     // Remove the previous send_headers action if it exists
-    remove_action('send_headers', 'add_cors_headers');
+    //remove_action('send_headers', 'add_cors_headers');
 
     // Call our CORS function before processing REST requests
     add_cors_headers();
