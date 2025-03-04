@@ -30,12 +30,10 @@ function headless_theme_setup() {
 add_action('after_setup_theme', 'headless_theme_setup');
 
 // CORS header for REST API
-// Update this function in your functions.php
 function add_cors_headers() {
     // Add Access-Control-Allow-Origin header
     $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
-    // You may want to limit this to specific origins in production
     // For development, allow localhost
     if ($http_origin == "http://localhost:3000" ||
         $http_origin == "https://localhost:3000" ||
@@ -80,9 +78,9 @@ $required_files = [
     '/inc/rest/endpoints.php',
     '/inc/admin/theme-options.php',
     // Feature files
-    '/inc/features/stats.php',
-    '/inc/features/selling-points.php',
-    '/inc/features/gallery.php'
+    '/inc/admin/features/stats.php',
+    '/inc/admin/features/selling-points.php',
+    '/inc/admin/features/gallery.php'
 ];
 
 foreach ($required_files as $file) {
@@ -98,8 +96,8 @@ function steget_admin_scripts() {
 
     // Only load on the theme options page
     if ($screen && strpos($screen->id, 'steget-theme-options') !== false) {
-        wp_enqueue_script('steget-admin-js', get_template_directory_uri() . '/js/admin.js', array('jquery'), '1.0', true);
-        wp_enqueue_style('steget-admin-css', get_template_directory_uri() . '/css/admin.css');
+        wp_enqueue_script('steget-admin-js', get_template_directory_uri() . '/admin/js/admin.js', array('jquery'), '1.0', true);
+        wp_enqueue_style('steget-admin-css', get_template_directory_uri() . '/admin/css/admin.css');
 
         // For media uploader in gallery
         wp_enqueue_media();
@@ -195,6 +193,7 @@ function headless_theme_dequeue_plugin_styles() {
 add_action('wp_enqueue_scripts', 'headless_theme_dequeue_plugin_styles', 20);
 
 // For inc/post-types/evaluation.php
+/*
 function enqueue_evaluation_scripts() {
     wp_enqueue_script('evaluation-form', get_template_directory_uri() . '/js/evaluation-form.js', [], '1.0', true);
     wp_localize_script('evaluation-form', 'wpApiSettings', [
@@ -203,7 +202,7 @@ function enqueue_evaluation_scripts() {
     ]);
 }
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
-
+*/
 
 /**
  * Included Contact Form 7 custom endpoints to functions.php
