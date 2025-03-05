@@ -852,6 +852,102 @@ fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
 Here's how to create a React component that integrates with the CF7 API:
 
 ```jsx
+# Contact Form 7 Integration for Headless WordPress
+
+This guide provides detailed information on how to integrate Contact Form 7 with a headless WordPress setup, including API endpoints, implementation examples, and troubleshooting tips.
+
+## Overview
+
+Contact Form 7 (CF7) is a popular WordPress plugin for creating forms, but it doesn't natively support headless implementations. The custom endpoints and components in your theme bridge this gap, allowing you to use CF7 forms in a decoupled frontend.
+
+## API Endpoints
+
+Your headless theme provides the following custom endpoints for Contact Form 7:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/cf7/forms` | GET | List all available Contact Form 7 forms |
+| `/wp-json/steget/v1/cf7/form/{id}` | GET | Get form structure and fields for a specific form |
+| `/wp-json/steget/v1/cf7/submit/{id}` | POST | Submit a form |
+
+## How to Use the API
+
+### 1. List Available Forms
+
+First, fetch all available forms to get their IDs:
+
+```javascript
+fetch('/wp-json/steget/v1/cf7/forms')
+  .then(response => response.json())
+  .then(forms => {
+    console.log('Available forms:', forms);
+    // forms = [{ id: 123, title: "Contact Form", shortcode: "[contact-form-7 id=\"123\" title=\"Contact Form\"]" }, ...]
+  });
+```
+
+### 2. Get Form Structure
+
+To build a dynamic form, fetch its structure:
+
+```javascript
+const formId = 146; // Replace with your form ID
+
+fetch(`/wp-json/steget/v1/cf7/form/${formId}`)
+  .then(response => response.json())
+  .then(formData => {
+    console.log('Form structure:', formData);
+    // formData includes title, fields, and messages
+  });
+```
+
+### 3. Submit Form Data
+
+To submit the form, send a POST request with the form data:
+
+```javascript
+const formId = 146; // Replace with your form ID
+const formData = new URLSearchParams();
+
+// Add form fields
+formData.append('your-name', 'John Doe');
+formData.append('your-email', 'john@example.com');
+formData.append('your-subject', 'Hello');
+formData.append('your-message', 'This is a test message');
+
+// Submit the form
+fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded'
+  },
+  body: formData.toString()
+})
+.then(response => response.json())
+.then(result => {
+  console.log('Submission result:', result);
+  // result = { status: "mail_sent", message: "Thank you for your message..." }
+})
+.catch(error => {
+  console.error('Error:', error);
+});
+```
+
+## Important Notes About Submission
+
+1. **Content-Type**: Always use `application/x-www-form-urlencoded` for the content type. This is what CF7 expects.
+
+2. **Field Names**: Use the exact field names defined in your CF7 form. These typically follow the pattern `your-name`, `your-email`, etc.
+
+3. **Response Format**: The submission endpoint returns a JSON object with:
+   - `status`: Either "mail_sent" (success) or "mail_failed" (error)
+   - `message`: The success/error message configured in the CF7 form settings
+   - `errors`: (If validation fails) Details about which fields failed validation
+
+## React Integration
+
+Here's how to create a React component that integrates with the CF7 API:
+
+```jsx
 import { useState } from 'react';
 
 const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
@@ -861,7 +957,7 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
     'your-subject': '',
     'your-message': ''
   });
-
+  
   const [formStatus, setFormStatus] = useState({
     submitting: false,
     submitted: false,
@@ -903,7 +999,7 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
           success: true,
           message: result.message
         });
-
+        
         // Reset form on success
         setFormData({
           'your-name': '',
@@ -937,8 +1033,68 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
           {formStatus.message}
         </div>
       )}
-
+      
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label html
+          <label htmlFor="your-name">Your Name</label>
+          <input
+            type="text"
+            id="your-name"
+            name="your-name"
+            value={formData['your-name']}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="your-email">Your Email</label>
+          <input
+            type="email"
+            id="your-email"
+            name="your-email"
+            value={formData['your-email']}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="your-subject">Subject</label>
+          <input
+            type="text"
+            id="your-subject"
+            name="your-subject"
+            value={formData['your-subject']}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="your-message">Your Message</label>
+          <textarea
+            id="your-message"
+            name="your-message"
+            value={formData['your-message']}
+            onChange={handleChange}
+            rows="5"
+            required
+          ></textarea>
+        </div>
+        
+        <button 
+          type="submit" 
+          className="submit-button"
+          disabled={formStatus.submitting}
+        >
+          {formStatus.submitting ? 'Sending...' : 'Send Message'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default ContactForm;
+
 ```
