@@ -276,57 +276,20 @@ function submit_cf7_form($request) {
             );
         }
 
-        // Process validation and submission
+        // Submit the form
+        $result = $form->submit($form_data);
 
-        // Method 1: Try direct submission with CF7 built-in methods
-        $submission = WPCF7_Submission::get_instance();
-        if (!$submission) {
-            // If no submission instance exists, set up the environment for creating one
-            $_POST = $form_data;
-            $_SERVER['REQUEST_METHOD'] = 'POST';
-
-            error_log('Creating new submission instance');
-            $submission = new WPCF7_Submission();
-            $submission->setup($form, $form_data);
-        }
-
-        // Validate the submission
-        if ($submission->validate()) {
-            error_log('Form validation passed');
-
-            // Process the submission
-            $result = $submission->submit();
-
-            if ($result) {
-                error_log('Form submission successful');
-                return [
-                    'status' => 'mail_sent',
-                    'message' => $form->message('mail_sent_ok'),
-                ];
-            } else {
-                error_log('Form processing failed');
-                return [
-                    'status' => 'mail_failed',
-                    'message' => $form->message('mail_sent_ng'),
-                ];
-            }
-        } else {
-            error_log('Form validation failed');
-            $invalid_fields = $submission->get_invalid_fields();
-            error_log('Invalid fields: ' . print_r($invalid_fields, true));
-
-            $invalid_field_data = [];
-            foreach ($invalid_fields as $field_name => $field_error) {
-                $invalid_field_data[] = [
-                    'field' => $field_name,
-                    'message' => is_array($field_error) ? ($field_error['reason'] ?? 'Invalid input') : $field_error,
-                ];
-            }
-
+        if ($result) {
+            error_log('Form submission successful');
             return [
-                'status' => 'validation_failed',
-                'message' => $form->message('validation_error'),
-                'invalidFields' => $invalid_field_data,
+                'status' => 'mail_sent',
+                'message' => $form->message('mail_sent_ok'),
+            ];
+        } else {
+            error_log('Form submission failed');
+            return [
+                'status' => 'mail_failed',
+                'message' => $form->message('mail_sent_ng'),
             ];
         }
 
