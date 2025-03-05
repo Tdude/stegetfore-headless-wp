@@ -161,79 +161,53 @@ add_action('rest_api_init', 'register_homepage_data_endpoint');
 
 
 function get_homepage_data() {
+    // Show deprecation notice in the REST API response
+    $deprecated_notice = 'This endpoint is deprecated. Please use /startpage/v2/homepage-data instead.';
+
     $homepage_id = get_option('page_on_front');
 
-    // Get featured image from the homepage
-    $featured_image_url = get_the_post_thumbnail_url($homepage_id, 'full');
+    // Include feature API files
+    require_once get_template_directory() . '/inc/features/hero-api.php';
+    require_once get_template_directory() . '/inc/features/posts-api.php';
+    require_once get_template_directory() . '/inc/features/testimonials-api.php';
+    require_once get_template_directory() . '/inc/features/cta-api.php';
 
-    // Get hero data
-    $hero_data = [
-        'title' => get_post_meta($homepage_id, 'hero_title', true) ?: get_the_title($homepage_id),
-        'intro' => get_post_meta($homepage_id, 'hero_intro', true) ?: get_the_excerpt($homepage_id),
-        'image' => get_post_meta($homepage_id, 'hero_image_id', true) ?
-                wp_get_attachment_image_src(get_post_meta($homepage_id, 'hero_image_id', true), 'full')[0] :
-                $featured_image_url, // Use featured image as fallback
-        'buttons' => json_decode(get_post_meta($homepage_id, 'hero_cta_buttons', true), true) ?: [
-            [
-                'text' => 'Upptäck mer',
-                'url' => '/om-oss',
-                'style' => 'primary'
-            ]
-        ],
-    ];
-
-    // Featured posts - using meta field
-    $featured_posts = get_posts([
-        'post_type' => 'post',
-        'posts_per_page' => 6,
-        'orderby' => 'date',
-        'order' => 'DESC'
-    ]);
-
-    $posts_data = [];
-    foreach ($featured_posts as $post) {
-        $posts_data[] = [
-            'id' => $post->ID,
-            'title' => $post->post_title,
-            'excerpt' => get_the_excerpt($post),
-            'link' => get_permalink($post),
-            'image' => get_the_post_thumbnail_url($post, 'medium'),
-            'date' => get_the_date('c', $post),
-        ];
-    }
-
-    // Get testimonials
-    $testimonials_query = get_posts([
-        'post_type' => 'testimonial',
-        'posts_per_page' => 6,
-        'orderby' => 'date',
-        'order' => 'DESC'
-    ]);
-
-    $testimonials_data = [];
-    foreach ($testimonials_query as $testimonial) {
-        $testimonials_data[] = [
-            'id' => $testimonial->ID,
-            'content' => $testimonial->post_content,
-            'author_name' => get_post_meta($testimonial->ID, 'author_name', true) ?: $testimonial->post_title,
-            'author_position' => get_post_meta($testimonial->ID, 'author_position', true) ?: '',
-            'author_image' => get_the_post_thumbnail_url($testimonial->ID, 'thumbnail')
-        ];
-    }
-
-    // Return all data
+    // Use the new modular functions but maintain the original format
     return [
-        'hero' => $hero_data,
-        'featured_posts' => $posts_data,
+        'hero' => get_hero_data($homepage_id),
+        'featured_posts' => get_featured_posts_data(),
         'featured_posts_title' => 'Nytt från bloggen',
-        'cta' => [
-          'title' => get_post_meta($homepage_id, 'cta_title', true) ?: '',
-          'description' => get_post_meta($homepage_id, 'cta_description', true) ?: '',
-          'button_text' => get_post_meta($homepage_id, 'cta_button_text', true) ?: '',
-          'button_url' => get_post_meta($homepage_id, 'cta_button_url', true) ?: '',
-          'background_color' => get_post_meta($homepage_id, 'cta_background_color', true) ?: 'bg-primary',
-        ],
-        'testimonials' => $testimonials_data,
+        'cta' => get_cta_data($homepage_id),
+        'testimonials' => get_testimonials_data(),
+        'testimonials_title' => 'Vad våra klienter säger',
+        '_deprecated' => $deprecated_notice
+    ];
+}
+
+function register_homepage_data_v2_endpoint() {
+    register_rest_route('startpage/v2', '/homepage-data', [
+        'methods' => 'GET',
+        'callback' => 'get_homepage_data_v2',
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'register_homepage_data_v2_endpoint');
+
+function get_homepage_data_v2() {
+    $homepage_id = get_option('page_on_front');
+
+    // Include all feature API files if not already included
+    require_once get_template_directory() . '/inc/features/hero-api.php';
+    require_once get_template_directory() . '/inc/features/posts-api.php';
+    require_once get_template_directory() . '/inc/features/testimonials-api.php';
+    require_once get_template_directory() . '/inc/features/cta-api.php';
+
+    return [
+        'hero' => get_hero_data($homepage_id),
+        'featured_posts' => get_featured_posts_data(),
+        'featured_posts_title' => 'Nytt från bloggen',
+        'cta' => get_cta_data($homepage_id),
+        'testimonials' => get_testimonials_data(),
         'testimonials_title' => 'Vad våra klienter säger'
     ];
 }

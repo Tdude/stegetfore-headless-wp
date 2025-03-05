@@ -23,3 +23,14 @@ function get_hero_data($homepage_id) {
         ],
     ];
 }
+
+function register_hero_endpoint() {
+    register_rest_route('steget/v1', '/hero/(?P<page_id>\d+)', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            return get_hero_data($request['page_id']);
+        },
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'register_hero_endpoint');

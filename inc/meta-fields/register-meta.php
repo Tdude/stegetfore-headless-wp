@@ -3,7 +3,7 @@
 * inc/meta-fields/register-meta.php
 */
 
- // Content type Porrtofolio NOT ACTIVE!
+ // Content type Portfolio NOT ACTIVATED in frontend!
 function register_portfolio_meta_fields() {
     register_post_meta('portfolio', 'project_url', [
         'show_in_rest' => true,
@@ -73,50 +73,3 @@ function register_featured_post_meta() {
     ]);
 }
 add_action('init', 'register_featured_post_meta');
-
-// Register component specific fields in the theme
-function register_homepage_meta_fields() {
-    // Hero Section
-    register_post_meta('page', 'hero_title', [
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'string',
-    ]);
-
-    register_post_meta('page', 'hero_intro', [
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'string',
-    ]);
-
-    register_post_meta('page', 'hero_image_id', [
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'integer',
-    ]);
-
-    // For CTA buttons and other repeatable fields, store as JSON
-    register_post_meta('page', 'hero_cta_buttons', [
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'string', // Will store JSON string
-        'sanitize_callback' => 'sanitize_text_field',
-    ]);
-
-    // Selling points
-    register_post_meta('page', 'selling_points', [
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'string',
-        'sanitize_callback' => 'sanitize_text_field',
-    ]);
-
-    // Testimonials
-    register_post_meta('page', 'testimonials', [
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'string',
-        'sanitize_callback' => 'sanitize_text_field',
-    ]);
-}
-add_action('init', 'register_homepage_meta_fields');

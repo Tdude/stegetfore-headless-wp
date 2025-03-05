@@ -25,3 +25,15 @@ function get_featured_posts_data() {
 
     return $posts_data;
 }
+
+// In posts-api.php
+function register_featured_posts_endpoint() {
+    register_rest_route('steget/v1', '/featured-posts', [
+        'methods' => 'GET',
+        'callback' => function() {
+            return get_featured_posts_data();
+        },
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'register_featured_posts_endpoint');
