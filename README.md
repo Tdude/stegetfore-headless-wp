@@ -4,14 +4,14 @@ This is a WP theme with a decoupled Next/React companion. First time I try it so
 
 # Docs docs docs
 
-
 ## Overview of the Module System and some guiding
 
 This theme provides a flexible way to create, manage, and reuse content blocks across pages. Each module has a specific template type (hero, testimonials, etc.) and can be assigned to pages through a custom meta box. I have tried to keep it generic. Most of the time you can add one or many.
 
 ### First a quick note
+
 If you don't like the "stegetfore" namespace, use your favourite editor to search and replace. For your terminal you can use the "sed" command but you're on your own.
-```find . -type f -exec sed -i 's/old_word/new_word/g' {} \;```
+`find . -type f -exec sed -i 's/old_word/new_word/g' {} \;`
 
 ## Module Architecture
 
@@ -850,7 +850,7 @@ fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
 
 Here's how to create a React component that integrates with the CF7 API:
 
-```jsx
+````jsx
 
 # WPCF7 Integration for a Headless theme
 
@@ -883,7 +883,7 @@ fetch('/wp-json/steget/v1/cf7/forms')
     console.log('Available forms:', forms);
     // forms = [{ id: 123, title: "Contact Form", shortcode: "[contact-form-7 id=\"123\" title=\"Contact Form\"]" }, ...]
   });
-```
+````
 
 ### 2. Get Form Structure
 
@@ -893,9 +893,9 @@ To build a dynamic form, fetch its structure:
 const formId = 146; // Replace with your form ID
 
 fetch(`/wp-json/steget/v1/cf7/form/${formId}`)
-  .then(response => response.json())
-  .then(formData => {
-    console.log('Form structure:', formData);
+  .then((response) => response.json())
+  .then((formData) => {
+    console.log("Form structure:", formData);
     // formData includes title, fields, and messages
   });
 ```
@@ -909,27 +909,27 @@ const formId = 146; // Replace with your form ID
 const formData = new URLSearchParams();
 
 // Add form fields
-formData.append('your-name', 'John Doe');
-formData.append('your-email', 'john@example.com');
-formData.append('your-subject', 'Hello');
-formData.append('your-message', 'This is a test message');
+formData.append("your-name", "John Doe");
+formData.append("your-email", "john@example.com");
+formData.append("your-subject", "Hello");
+formData.append("your-message", "This is a test message");
 
 // Submit the form
 fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
-  method: 'POST',
+  method: "POST",
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded'
+    "Content-Type": "application/x-www-form-urlencoded",
   },
-  body: formData.toString()
+  body: formData.toString(),
 })
-.then(response => response.json())
-.then(result => {
-  console.log('Submission result:', result);
-  // result = { status: "mail_sent", message: "Thank you for your message..." }
-})
-.catch(error => {
-  console.error('Error:', error);
-});
+  .then((response) => response.json())
+  .then((result) => {
+    console.log("Submission result:", result);
+    // result = { status: "mail_sent", message: "Thank you for your message..." }
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+  });
 ```
 
 ## Important Notes About Submission
@@ -948,31 +948,36 @@ fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
 Here's how to create a React component that integrates with the CF7 API:
 
 ```jsx
-import { useState } from 'react';
+import { useState } from "react";
 
-const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
+const ContactForm = ({ formId, apiUrl = "/wp-json" }) => {
   const [formData, setFormData] = useState({
-    'your-name': '',
-    'your-email': '',
-    'your-subject': '',
-    'your-message': ''
+    "your-name": "",
+    "your-email": "",
+    "your-subject": "",
+    "your-message": "",
   });
-  
+
   const [formStatus, setFormStatus] = useState({
     submitting: false,
     submitted: false,
     success: false,
-    message: ''
+    message: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormStatus({ submitting: true, submitted: false, success: false, message: '' });
+    setFormStatus({
+      submitting: true,
+      submitted: false,
+      success: false,
+      message: "",
+    });
 
     try {
       // Create URL encoded form data
@@ -983,45 +988,46 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
 
       // Submit the form
       const response = await fetch(`${apiUrl}/steget/v1/cf7/submit/${formId}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: urlEncodedData.toString()
+        body: urlEncodedData.toString(),
       });
 
       const result = await response.json();
 
-      if (result.status === 'mail_sent') {
+      if (result.status === "mail_sent") {
         setFormStatus({
           submitting: false,
           submitted: true,
           success: true,
-          message: result.message
+          message: result.message,
         });
-        
+
         // Reset form on success
         setFormData({
-          'your-name': '',
-          'your-email': '',
-          'your-subject': '',
-          'your-message': ''
+          "your-name": "",
+          "your-email": "",
+          "your-subject": "",
+          "your-message": "",
         });
       } else {
         setFormStatus({
           submitting: false,
           submitted: true,
           success: false,
-          message: result.message
+          message: result.message,
         });
       }
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
       setFormStatus({
         submitting: false,
         submitted: true,
         success: false,
-        message: 'There was an error sending your message. Please try again later.'
+        message:
+          "There was an error sending your message. Please try again later.",
       });
     }
   };
@@ -1029,11 +1035,13 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
   return (
     <div className="contact-form-wrapper">
       {formStatus.submitted && (
-        <div className={`form-message ${formStatus.success ? 'success' : 'error'}`}>
+        <div
+          className={`form-message ${formStatus.success ? "success" : "error"}`}
+        >
           {formStatus.message}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="your-name">Your Name</label>
@@ -1041,54 +1049,54 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
             type="text"
             id="your-name"
             name="your-name"
-            value={formData['your-name']}
+            value={formData["your-name"]}
             onChange={handleChange}
             required
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="your-email">Your Email</label>
           <input
             type="email"
             id="your-email"
             name="your-email"
-            value={formData['your-email']}
+            value={formData["your-email"]}
             onChange={handleChange}
             required
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="your-subject">Subject</label>
           <input
             type="text"
             id="your-subject"
             name="your-subject"
-            value={formData['your-subject']}
+            value={formData["your-subject"]}
             onChange={handleChange}
             required
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="your-message">Your Message</label>
           <textarea
             id="your-message"
             name="your-message"
-            value={formData['your-message']}
+            value={formData["your-message"]}
             onChange={handleChange}
             rows="5"
             required
           ></textarea>
         </div>
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           className="submit-button"
           disabled={formStatus.submitting}
         >
-          {formStatus.submitting ? 'Sending...' : 'Send Message'}
+          {formStatus.submitting ? "Sending..." : "Send Message"}
         </button>
       </form>
     </div>
@@ -1096,5 +1104,4 @@ const ContactForm = ({ formId, apiUrl = '/wp-json' }) => {
 };
 
 export default ContactForm;
-
 ```
