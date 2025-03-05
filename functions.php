@@ -5,13 +5,16 @@
 
 if (!defined('ABSPATH')) exit;
 
-// For admin
-/*
-function enqueue_admin_scripts() {
-    wp_enqueue_script('admin-js', get_template_directory_uri() . '/admin.js', array('jquery'), '1.0', true);
+// See all endpoints TEST!
+function list_all_registered_routes() {
+    $routes = rest_get_server()->get_routes();
+    error_log('=== REGISTERED REST ROUTES ===');
+    foreach ($routes as $route => $route_details) {
+        error_log($route);
+    }
+    error_log('=== END ROUTES ===');
 }
-add_action('admin_enqueue_scripts', 'enqueue_admin_scripts');
-*/
+add_action('rest_api_init', 'list_all_registered_routes', 999);
 
 
 // Theme Setup
@@ -78,31 +81,33 @@ $required_files = [
     '/inc/post-types/modules.php',
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
+    '/inc/rest/wpcf7-endpoints.php',
+    '/inc/rest/module-endpoints.php',
 
     // Feature files
     '/inc/features/hero.php',
-    '/inc/features/selling-points.php',
-    '/inc/features/testimonials.php',
-    '/inc/features/cta.php',
-
-    // API files
     '/inc/features/hero-api.php',
-    '/inc/features/posts-api.php',
+    '/inc/features/selling-points.php',
+    '/inc/features/selling-points-api.php',
+    '/inc/features/testimonials.php',
     '/inc/features/testimonials-api.php',
+    '/inc/features/cta.php',
     '/inc/features/cta-api.php',
+    '/inc/features/posts-api.php',
 
-    // Keep theme options if needed
     '/inc/admin/theme-options.php'
 ];
 
+// Log'em
 foreach ($required_files as $file) {
     $file_path = get_template_directory() . $file;
     if (file_exists($file_path)) {
         require_once $file_path;
+        error_log("Loaded file: $file");
+    } else {
+        error_log("Could not find file: $file");
     }
 }
-
-add_filter('show_admin_bar', '__return_true');
 
 
 // Caching
