@@ -26,52 +26,52 @@ function module_template_default_content($content, $post) {
 
         switch ($template) {
             case 'hero':
-                return '<h1>Hero Title</h1><p>This is a hero section with a compelling introduction to catch your visitor\'s attention.</p>';
+                return '<h1>Hero Titel</h1><p>Det här är dafaulttexten till en hero.</p>';
 
             case 'selling_points':
-                return '<h2>Our Key Benefits</h2><p>Discover why our solutions stand out from the competition.</p>';
+                return '<h2>Fördelar med osss</h2><p>Detta är kort som man kan lista tre i bredd.</p>';
 
             case 'stats':
-                return '<h2>Our Numbers Speak</h2><p>See the impact we\'ve made through these key statistics.</p>';
+                return '<h2>Statistik</h2><p>Här kan man presentera kul siffror.</p>';
 
             case 'testimonials':
-                return '<h2>What Our Clients Say</h2><p>Read testimonials from our satisfied customers.</p>';
+                return '<h2>Vad våra klienter säger</h2><p>Läs recensioner från våra nöjdaste kunder.</p>';
 
             case 'gallery':
-                return '<h2>Image Gallery</h2><p>Explore our visual showcase highlighting our work.</p>';
+                return '<h2>Galleri</h2><p>Här kan man presentera tidigare arbete på ett snyggt sätt.</p>';
 
             case 'faq':
-                return '<h2>Frequently Asked Questions</h2><p>Find answers to common questions about our services.</p>';
+                return '<h2>Vanliga frågor</h2><p>En vanlig FAQ som kan vara med kollapsbara svar.</p>';
 
             case 'tabbed_content':
-                return '<h2>Tabbed Content</h2><p>Navigate through different sections of information in an organized way.</p>';
+                return '<h2>Flikar med innehåll</h2><p>Navigera med flikar där du kan presentera en massa innehåll utan att scrolla.</p>';
 
             case 'charts':
-                return '<h2>Data Visualization</h2><p>Understand the numbers through clear and intuitive charts.</p>';
+                return '<h2>Datavisualiseringar</h2><p>Grafer och grejs kan det vara här.</p>';
 
             case 'sharing':
-                return '<h2>Share This Content</h2><p>Spread the word about our content through your favorite social networks.</p>';
+                return '<h2>Dela detta innehåll</h2><p>Länkar till sociala medier kan vara här.</p>';
 
             case 'login':
-                return '<h2>Member Login</h2><p>Access your account to get personalized services and information.</p>';
+                return '<h2>Login</h2><p>Sajten kan bli mer personlig och man kan ta betalt för innehåll.</p>';
 
             case 'payment':
-                return '<h2>Secure Payment</h2><p>Complete your transaction with our secure payment system.</p>';
+                return '<h2>Säker betalning</h2><p>Ett transaktionssytem kan man ha på flera sidor.</p>';
 
             case 'calendar':
-                return '<h2>Schedule & Events</h2><p>View upcoming events or book appointments through our calendar system.</p>';
+                return '<h2>Kalender och event</h2><p>Ett kalendersystem kan vara bra för att visa när man är bokad.</p>';
 
             case 'cta':
-                return '<h2>Ready to Get Started?</h2><p>Take the next step towards achieving your goals with our solutions.</p>';
+                return '<h2>Starta nu!</h2><p>En knapp med uppmaning trivs bra där man vill sälja något.</p>';
 
             case 'text_media':
-                return '<h2>Featured Content</h2><p>Learn more about our services through this detailed overview with accompanying media.</p>';
+                return '<h2>I fokus</h2><p>Välj ut en kategori med poster och några av inläggen kan hamna på tex. startsidan.</p>';
 
             case 'video':
-                return '<h2>Watch Our Video</h2><p>Get a visual introduction to our products and services.</p>';
+                return '<h2>Video</h2><p>Ibland kan det vara bra att presentera något genom en vijå.</p>';
 
             case 'form':
-                return '<h2>Contact Us</h2><p>Fill out the form below and we\'ll get back to you shortly.</p>';
+                return '<h2>Kontakt Us</h2><p>Ett kontaktformulär så besökaren kan höra av sig.</p>';
         }
     }
 
