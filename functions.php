@@ -75,8 +75,23 @@ $required_files = [
     '/inc/post-types/portfolio.php',
     '/inc/post-types/testimonials.php',
     '/inc/post-types/evaluation.php',
+    '/inc/post-types/modules.php',
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
+
+    // Feature files
+    '/inc/features/hero.php',
+    '/inc/features/selling-points.php',
+    '/inc/features/testimonials.php',
+    '/inc/features/cta.php',
+
+    // API files
+    '/inc/features/hero-api.php',
+    '/inc/features/posts-api.php',
+    '/inc/features/testimonials-api.php',
+    '/inc/features/cta-api.php',
+
+    // Keep theme options if needed
     '/inc/admin/theme-options.php'
 ];
 
