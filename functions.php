@@ -5,7 +5,24 @@
 
 if (!defined('ABSPATH')) exit;
 
-// See all endpoints TEST!
+/**
+ * DIAGNOSTIC - CAREFUL: Temporarily test email on EVERY load
+ * */
+/*
+function test_wp_mail() {
+    $to = 'your-email@example.com'; // Your email address
+    $subject = 'Test Email from WordPress';
+    $message = 'This is a test email from your WordPress site';
+    $headers = 'From: WordPress <wordpress@yoursite.com>' . "\r\n";
+
+    $result = wp_mail($to, $subject, $message, $headers);
+    error_log('Mail test result: ' . ($result ? 'Success' : 'Failed'));
+}
+add_action('init', 'test_wp_mail');
+*/
+
+// DIAGNOSTIC: See all endpoints TEST!
+/*
 function list_all_registered_routes() {
     $routes = rest_get_server()->get_routes();
     error_log('=== REGISTERED REST ROUTES ===');
@@ -15,7 +32,7 @@ function list_all_registered_routes() {
     error_log('=== END ROUTES ===');
 }
 add_action('rest_api_init', 'list_all_registered_routes', 999);
-
+*/
 
 // Theme Setup
 function headless_theme_setup() {
@@ -98,7 +115,10 @@ $required_files = [
     '/inc/admin/theme-options.php'
 ];
 
-// Log'em
+/**
+ * DIAGNOSTIC: Log included files
+*/
+/*
 foreach ($required_files as $file) {
     $file_path = get_template_directory() . $file;
     if (file_exists($file_path)) {
@@ -108,7 +128,7 @@ foreach ($required_files as $file) {
         error_log("Could not find file: $file");
     }
 }
-
+*/
 
 // Caching
 // This could live in its own plugin
