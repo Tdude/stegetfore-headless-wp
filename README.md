@@ -762,7 +762,7 @@ How to integrate Contact Form 7 with a headless WordPress setup, including API e
 
 ## Overview
 
-Contact Form 7 (CF7) is a popular WordPress plugin for creating forms, but it doesn't natively support headless implementations (as I know of). The custom endpoints and components in this theme bridge this gap, allowing you to use CF7 forms in a decoupled frontend.
+Contact Form 7 (CF7) is a WordPress plugin for creating forms and send email, but it doesn't natively support headless implementations (as I know of). The custom endpoints and components in this theme bridge this gap, allowing you to use CF7 forms in a decoupled frontend.
 
 ## API Endpoints
 
@@ -852,17 +852,18 @@ fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
 Here's how to create a React component that integrates with the CF7 API:
 
 ```jsx
-# Contact Form 7 Integration for Headless WordPress
 
-This guide provides detailed information on how to integrate Contact Form 7 with a headless WordPress setup, including API endpoints, implementation examples, and troubleshooting tips.
+# WPCF7 Integration for a Headless theme
+
+How to integrate Contact Form 7 with a headless WordPress setup.
 
 ## Overview
 
-Contact Form 7 (CF7) is a popular WordPress plugin for creating forms, but it doesn't natively support headless implementations. The custom endpoints and components in your theme bridge this gap, allowing you to use CF7 forms in a decoupled frontend.
+CF7 is a WordPress plugin for creating forms, but it doesn't natively support headless implementations. The custom endpoints and components in this theme bridge the gap, allowing you to use CF7 forms in a decoupled frontend. Because why not reinventing the wheel?
 
 ## API Endpoints
 
-Your headless theme provides the following custom endpoints for Contact Form 7:
+This headless theme provides the following custom endpoints for Contact Form 7:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
