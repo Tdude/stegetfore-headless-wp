@@ -1,16 +1,17 @@
 # Headless Wordpress theme
 
-This is a WP theme with a decoupled Next/React companion. First time I try it so there might be tweaking to do. So far so good.
+This is a WP theme with a decoupled Next/React companion. First time I try it so there definitively is tweaking to do. So far so good.
 
 # Docs docs docs
 
-## WordPress Headless Modules Implementation Guide
 
-This document provides a technical overview of how the module system works in your headless WordPress theme and how to implement it in a frontend application.
+## Overview of the Module System and some guiding
 
-## Overview of the Module System
+This theme provides a flexible way to create, manage, and reuse content blocks across pages. Each module has a specific template type (hero, testimonials, etc.) and can be assigned to pages through a custom meta box. I have tried to keep it generic. Most of the time you can add one or many.
 
-The module system in this headless WordPress theme provides a flexible way to create, manage, and reuse content blocks across pages. Each module has a specific template type (hero, testimonials, etc.) and can be assigned to pages through a custom meta box.
+### First a quick note
+If you don't like the "stegetfore" namespace, use your favourite editor to search and replace. For your terminal you can use the "sed" command but you're on your own.
+```find . -type f -exec sed -i 's/old_word/new_word/g' {} \;```
 
 ## Module Architecture
 
@@ -531,13 +532,11 @@ export default PageBuilder;
 
 ### I know WP has blocks but sometimes we do better without them.
 
-This guide provides a comprehensive overview of how to implement the module system from this headless WordPress theme in a frontend application. The module system offers a flexible way to create, manage, and reuse content blocks, making it an ideal solution for building dynamic websites with a headless CMS architecture.
-
 By leveraging the module REST API endpoints and following the implementation examples provided, you can create a robust and maintainable frontend that connects seamlessly with your WordPress backend.
 
-## WordPress Headless API Endpoints Reference
+## API Endpoints Reference
 
-This document contains all the API endpoints available in the headless WordPress theme, organized by category for easy reference.
+All the API endpoints available in the headless WordPress theme, organized by category for easy reference.
 
 ## Core Endpoints
 
@@ -756,17 +755,17 @@ fetch("/wp-json/steget/v1/modules?placement=homepage")
 }
 ```
 
-# Contact Form 7 Integration for Headless WordPress
+# Contact Form 7 Integration
 
-How to integrate Contact Form 7 with a headless WordPress setup, including API endpoints, implementation examples, and troubleshooting tips.
+Integrate Contact Form 7 with a headless WordPress setup, including API endpoints, implementation examples, and troubleshooting tips.
 
 ## Overview
 
-Contact Form 7 (CF7) is a WordPress plugin for creating forms and send email, but it doesn't natively support headless implementations (as I know of). The custom endpoints and components in this theme bridge this gap, allowing you to use CF7 forms in a decoupled frontend.
+Contact Form 7 (CF7) is a WordPress plugin for creating forms and send email, but it doesn't natively support headless implementations (as I know of). The custom endpoints and components in this theme bridge this gap, allowing you to use CF7 forms in a decoupled environment.
 
 ## API Endpoints
 
-This headless theme provides the following custom endpoints for Contact Form 7:
+You have the following custom endpoints for Contact Form 7:
 
 | Endpoint                             | Method | Description                                       |
 | ------------------------------------ | ------ | ------------------------------------------------- |
