@@ -116,22 +116,22 @@ $required_files = [
 ];
 
 /**
- * DIAGNOSTIC: Log included files
+ * Load n log included files
 */
-/*
+
 foreach ($required_files as $file) {
     $file_path = get_template_directory() . $file;
     if (file_exists($file_path)) {
         require_once $file_path;
-        error_log("Loaded file: $file");
+        // error_log("Loaded file: $file");
     } else {
         error_log("Could not find file: $file");
     }
 }
-*/
 
-// Caching
-// This could live in its own plugin
+
+
+// Caching. This could live in its own plugin
 function trigger_nextjs_revalidation($post_id) {
     // Skip if this is an autosave
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
