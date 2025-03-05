@@ -3,7 +3,19 @@
  * Enhanced REST API endpoints for Contact Form 7
  */
 
-// Register the custom WPCF7 endpoints
+// Error logging if you don't have it set up
+/*
+if (!defined('WP_DEBUG')) {
+    define('WP_DEBUG', true);
+}
+if (!defined('WP_DEBUG_LOG')) {
+    define('WP_DEBUG_LOG', true);
+}
+*/
+
+/**
+ *  Register custom WPCF7 endpoints
+ */
 function register_wpcf7_endpoints() {
     // Get form structure endpoint
     register_rest_route('steget/v1', '/cf7/form/(?P<id>[\w-]+)', array(
@@ -186,14 +198,20 @@ function get_cf7_form_data($request) {
 }
 
 /**
- * Consolidated CF7 form submission handler
+ * Improved CF7 form submission handler with detailed logging
  */
 function submit_cf7_form($request) {
     error_log('=== CF7 SUBMISSION START ===');
+    error_log('Request method: ' . $_SERVER['REQUEST_METHOD']);
+
+    if (isset($_SERVER['CONTENT_TYPE'])) {
+        error_log('Content-Type: ' . $_SERVER['CONTENT_TYPE']);
+    }
 
     try {
         // Check if CF7 is active
         if (!class_exists('WPCF7_ContactForm')) {
+            error_log('CF7 plugin not active');
             return new WP_Error(
                 'cf7_not_active',
                 'Contact Form 7 plugin is not active',
@@ -204,6 +222,11 @@ function submit_cf7_form($request) {
         // Get form ID
         $form_id = $request['id'];
         error_log('Form ID: ' . $form_id);
+
+        // Log raw request info
+        error_log('Request headers: ' . json_encode(getallheaders()));
+        $raw_body = file_get_contents('php://input');
+        error_log('Raw request body: ' . $raw_body);
 
         // Get the form
         $form = wpcf7_contact_form($form_id);
@@ -216,56 +239,67 @@ function submit_cf7_form($request) {
             );
         }
 
+        error_log('Form found: ' . $form->name() . ' (ID: ' . $form->id() . ')');
+
         // Get form data from multiple possible sources
         $form_data = [];
 
-        // 1. Try parameters in the URL
-        $params = $request->get_params();
-        foreach ($params as $key => $value) {
-            if (!in_array($key, ['id', 'route', 'rest_route'])) {
-                $form_data[$key] = $value;
+        // 1. Try JSON data first (if Content-Type is application/json)
+        $content_type = $request->get_content_type();
+        if (!empty($content_type) && strpos($content_type['value'], 'application/json') !== false) {
+            $json_data = json_decode($raw_body, true);
+            if ($json_data) {
+                error_log('Parsed JSON data: ' . json_encode($json_data));
+                $form_data = $json_data;
             }
         }
 
-        // 2. Try body parameters
+        // 2. Try body parameters (application/x-www-form-urlencoded)
         if (empty($form_data)) {
             $body_params = $request->get_body_params();
             if (!empty($body_params)) {
+                error_log('Found body params: ' . json_encode($body_params));
                 $form_data = $body_params;
             }
         }
 
-        // 3. Try JSON data
+        // 3. Try parameters in the URL
         if (empty($form_data)) {
-            $content_type = $request->get_content_type();
-            if (!empty($content_type) && strpos($content_type['value'], 'application/json') !== false) {
-                $json_data = json_decode($request->get_body(), true);
-                if ($json_data) {
-                    $form_data = $json_data;
+            $params = $request->get_params();
+            foreach ($params as $key => $value) {
+                if (!in_array($key, ['id', 'route', 'rest_route'])) {
+                    $form_data[$key] = $value;
                 }
+            }
+            if (!empty($form_data)) {
+                error_log('Found URL params: ' . json_encode($form_data));
             }
         }
 
         // 4. Try raw body parsing
-        if (empty($form_data)) {
-            $body = $request->get_body();
-            if (!empty($body)) {
-                parse_str($body, $parsed_body);
-                if (!empty($parsed_body)) {
-                    $form_data = $parsed_body;
-                }
+        if (empty($form_data) && !empty($raw_body)) {
+            parse_str($raw_body, $parsed_body);
+            if (!empty($parsed_body)) {
+                error_log('Parsed raw body: ' . json_encode($parsed_body));
+                $form_data = $parsed_body;
             }
         }
 
         // 5. Check files
         $files = $request->get_file_params();
         if (!empty($files)) {
+            error_log('Found files: ' . json_encode(array_keys($files)));
             foreach ($files as $key => $file) {
                 $form_data[$key] = $file;
             }
         }
 
-        error_log('Form data collected: ' . print_r($form_data, true));
+        // 6. Debug: Check $_POST directly
+        if (!empty($_POST)) {
+            error_log('Raw $_POST data: ' . json_encode($_POST));
+        }
+
+        error_log('Final form data for submission: ' . json_encode($form_data));
 
         if (empty($form_data)) {
             error_log('No form data found in request');
@@ -276,20 +310,60 @@ function submit_cf7_form($request) {
             );
         }
 
+        // Log form properties before submission
+        $form_properties = $form->get_properties();
+        error_log('Form mail settings: ' . json_encode($form_properties['mail']));
+
+        // Create a CF7 submission object
+        WPCF7_Submission::get_instance([
+            'skip_mail' => false,
+        ]);
+
         // Submit the form
         $result = $form->submit($form_data);
+        error_log('Form submission result: ' . json_encode($result));
 
-        if ($result) {
-            error_log('Form submission successful');
-            return [
-                'status' => 'mail_sent',
-                'message' => $form->message('mail_sent_ok'),
-            ];
+        $submission = WPCF7_Submission::get_instance();
+
+        if ($submission) {
+            error_log('Submission created');
+
+            // Get validation errors if any
+            $validation_errors = $submission->get_invalid_fields();
+            if (!empty($validation_errors)) {
+                error_log('Validation errors: ' . json_encode($validation_errors));
+
+                return [
+                    'status' => 'validation_failed',
+                    'message' => $form->message('validation_error'),
+                    'errors' => $validation_errors
+                ];
+            }
+
+            // Check if mail was sent
+            $mail_sent = $submission->get_status() === 'mail_sent';
+            error_log('Mail sent status: ' . ($mail_sent ? 'TRUE' : 'FALSE'));
+
+            if ($mail_sent) {
+                return [
+                    'status' => 'mail_sent',
+                    'message' => $form->message('mail_sent_ok'),
+                ];
+            } else {
+                $error_message = $form->message('mail_sent_ng');
+                error_log('Mail sending failed. Error: ' . $error_message);
+
+                return [
+                    'status' => 'mail_failed',
+                    'message' => $error_message,
+                ];
+            }
         } else {
-            error_log('Form submission failed');
+            error_log('No submission instance found');
+
             return [
                 'status' => 'mail_failed',
-                'message' => $form->message('mail_sent_ng'),
+                'message' => 'The submission process failed.',
             ];
         }
 
@@ -312,3 +386,17 @@ function submit_cf7_form($request) {
         'message' => 'An unexpected error occurred processing the form'
     ];
 }
+
+// Add hook to enable CORS for API requests
+add_action('rest_api_init', function() {
+    remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
+
+    add_filter('rest_pre_serve_request', function($value) {
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+
+        return $value;
+    });
+}, 15);
