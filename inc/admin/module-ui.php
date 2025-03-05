@@ -1,5 +1,5 @@
 <?php
-/** inc/admin/module-fields.php
+/** inc/admin/module-ui.php
  * Admin UI related methods
  *
  * Add meta boxes for module settings
