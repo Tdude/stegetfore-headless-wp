@@ -2,106 +2,43 @@
 /*
 * inc/admin/theme-options.php
 */
-
-if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
-}
-
-/**
- * Add theme options page to the admin menu
- */
-function steget_add_theme_options_page() {
-    add_theme_page(
+function headless_theme_options_page() {
+    add_menu_page(
         'Theme Options',
         'Theme Options',
         'manage_options',
-        'steget-theme-options',
-        'steget_render_theme_options_page'
+        'headless-theme-options',
+        'render_theme_options_page',
+        'dashicons-admin-generic'
     );
 }
-add_action('admin_menu', 'steget_add_theme_options_page');
+add_action('admin_menu', 'headless_theme_options_page');
 
+function render_theme_options_page() {
+    if (isset($_POST['headless_mode'])) {
+        update_option('headless_mode_enabled', $_POST['headless_mode'] === 'on');
+    }
 
-
-/**
- * Render the theme options page
- */
-function steget_render_theme_options_page() {
+    $headless_mode = get_option('headless_mode_enabled');
     ?>
 <div class="wrap">
-    <h1><?php echo get_admin_page_title(); ?></h1>
-
-    <?php settings_errors(); ?>
-
-    <h2 class="nav-tab-wrapper">
-        <a href="#homepage-tab" class="nav-tab nav-tab-active">Hemsida</a>
-        <a href="#general-tab" class="nav-tab">Allmänt</a>
-        <!-- Other tabs -->
-    </h2>
-
-    <form method="post" action="options.php">
-        <?php
-            settings_fields('steget_theme_options');
-            do_settings_sections('steget_theme_options');
-            ?>
-
-        <div id="homepage-tab" class="tab-content">
-            <?php steget_render_homepage_tab(); ?>
-        </div>
-
-        <div id="general-tab" class="tab-content" style="display:none;">
-            <?php steget_render_general_tab(); ?>
-        </div>
-
+    <h1>Theme Options</h1>
+    <form method="post">
+        <table class="form-table">
+            <tr>
+                <th scope="row">Headless Mode</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="headless_mode" <?php checked($headless_mode); ?>>
+                        Enable headless mode
+                    </label>
+                </td>
+            </tr>
+        </table>
         <?php submit_button(); ?>
     </form>
 </div>
-
-<script>
-jQuery(document).ready(function($) {
-    // Tab switching logic
-    $('.nav-tab').on('click', function(e) {
-        e.preventDefault();
-        var target = $(this).attr('href');
-
-        // Update tabs
-        $('.nav-tab').removeClass('nav-tab-active');
-        $(this).addClass('nav-tab-active');
-
-        // Update content
-        $('.tab-content').hide();
-        $(target).show();
-    });
-});
-</script>
 <?php
-}
-
-/**
- * Render the homepage options tab
- */
-function steget_render_homepage_tab() {
-    // Hero section - use the theme options version
-    steget_render_hero_section_options();
-
-    // Featured posts section
-    steget_render_featured_posts_section();
-
-    // New sections
-    steget_render_selling_points_section();
-    steget_render_stats_section();
-    steget_render_gallery_section();
-
-    // CTA section
-    steget_render_cta_section();
-}
-
-/**
- * Render the general options tab
- */
-function steget_render_general_tab() {
-    // General settings content
-    echo('PIRUM PARUM TEST');
 }
 
 

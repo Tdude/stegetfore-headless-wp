@@ -50,16 +50,17 @@ function headless_theme_setup() {
 add_action('after_setup_theme', 'headless_theme_setup');
 
 // CORS header for REST API
+// Update this function in your functions.php
 function add_cors_headers() {
     // Add Access-Control-Allow-Origin header
     $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
+    // You may want to limit this to specific origins in production
     // For development, allow localhost
     if ($http_origin == "http://localhost:3000" ||
         $http_origin == "https://localhost:3000" ||
         strpos($http_origin, 'stegetfore.nu') !== false) {
         header("Access-Control-Allow-Origin: $http_origin");
-        header("Access-Control-Allow-Credentials: true");
     } else {
         header("Access-Control-Allow-Origin: *");
     }
@@ -74,12 +75,13 @@ function add_cors_headers() {
 
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
     header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
+    header("Access-Control-Allow-Credentials: true");
 }
 
 // Make sure this function is called for REST requests
 add_action('rest_api_init', function() {
     // Remove the previous send_headers action if it exists
-    //remove_action('send_headers', 'add_cors_headers');
+    remove_action('send_headers', 'add_cors_headers');
 
     // Call our CORS function before processing REST requests
     add_cors_headers();
@@ -87,7 +89,6 @@ add_action('rest_api_init', function() {
 
 // Keep the original hook for non-REST requests
 add_action('send_headers', 'add_cors_headers');
-
 
 // Load theme components
 $required_files = [
@@ -216,7 +217,6 @@ function headless_theme_dequeue_plugin_styles() {
 add_action('wp_enqueue_scripts', 'headless_theme_dequeue_plugin_styles', 20);
 
 // For inc/post-types/evaluation.php
-/*
 function enqueue_evaluation_scripts() {
     wp_enqueue_script('evaluation-form', get_template_directory_uri() . '/js/evaluation-form.js', [], '1.0', true);
     wp_localize_script('evaluation-form', 'wpApiSettings', [
@@ -225,7 +225,7 @@ function enqueue_evaluation_scripts() {
     ]);
 }
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
-*/
+
 
 /**
  * Included Contact Form 7 custom endpoints to functions.php
