@@ -5,14 +5,34 @@
 
 if (!defined('ABSPATH')) exit;
 
-// For admin
+/**
+ * DIAGNOSTIC - CAREFUL: Temporarily test email on EVERY load
+ * */
 /*
-function enqueue_admin_scripts() {
-    wp_enqueue_script('admin-js', get_template_directory_uri() . '/admin.js', array('jquery'), '1.0', true);
+function test_wp_mail() {
+    $to = 'your-email@example.com'; // Your email address
+    $subject = 'Test Email from WordPress';
+    $message = 'This is a test email from your WordPress site';
+    $headers = 'From: WordPress <wordpress@yoursite.com>' . "\r\n";
+
+    $result = wp_mail($to, $subject, $message, $headers);
+    error_log('Mail test result: ' . ($result ? 'Success' : 'Failed'));
 }
-add_action('admin_enqueue_scripts', 'enqueue_admin_scripts');
+add_action('init', 'test_wp_mail');
 */
 
+// DIAGNOSTIC: See all endpoints TEST!
+/*
+function list_all_registered_routes() {
+    $routes = rest_get_server()->get_routes();
+    error_log('=== REGISTERED REST ROUTES ===');
+    foreach ($routes as $route => $route_details) {
+        error_log($route);
+    }
+    error_log('=== END ROUTES ===');
+}
+add_action('rest_api_init', 'list_all_registered_routes', 999);
+*/
 
 // Theme Setup
 function headless_theme_setup() {
@@ -74,40 +94,43 @@ $required_files = [
     '/inc/post-types/portfolio.php',
     '/inc/post-types/testimonials.php',
     '/inc/post-types/evaluation.php',
+    '/inc/post-types/modules.php',
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
-    '/inc/admin/theme-options.php',
+    '/inc/rest/wpcf7-endpoints.php',
+    '/inc/rest/module-endpoints.php',
+
     // Feature files
-    '/inc/admin/features/stats.php',
-    '/inc/admin/features/selling-points.php',
-    '/inc/admin/features/gallery.php'
+    '/inc/features/hero.php',
+    '/inc/features/hero-api.php',
+    '/inc/features/selling-points.php',
+    '/inc/features/selling-points-api.php',
+    '/inc/features/testimonials.php',
+    '/inc/features/testimonials-api.php',
+    '/inc/features/cta.php',
+    '/inc/features/cta-api.php',
+    '/inc/features/posts-api.php',
+
+    '/inc/admin/theme-options.php'
 ];
+
+/**
+ * Load n log included files
+*/
 
 foreach ($required_files as $file) {
     $file_path = get_template_directory() . $file;
     if (file_exists($file_path)) {
         require_once $file_path;
+        // error_log("Loaded file: $file");
+    } else {
+        error_log("Could not find file: $file");
     }
 }
 
-// Handle admin scripts for repeatable fields
-function steget_admin_scripts() {
-    $screen = get_current_screen();
-
-    // Only load on the theme options page
-    if ($screen && strpos($screen->id, 'steget-theme-options') !== false) {
-        wp_enqueue_script('steget-admin-js', get_template_directory_uri() . '/admin/js/admin.js', array('jquery'), '1.0', true);
-        wp_enqueue_style('steget-admin-css', get_template_directory_uri() . '/admin/css/admin.css');
-
-        // For media uploader in gallery
-        wp_enqueue_media();
-    }
-}
-add_action('admin_enqueue_scripts', 'steget_admin_scripts');
 
 
-// Caching
-// This could live in its own plugin
+// Caching. This could live in its own plugin
 function trigger_nextjs_revalidation($post_id) {
     // Skip if this is an autosave
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
