@@ -129,6 +129,11 @@ function get_single_module_endpoint($request) {
 function prepare_module_for_response($post) {
     $featured_image = get_the_post_thumbnail_url($post->ID, 'full');
     $template = get_post_meta($post->ID, 'module_template', true);
+    // Get explicit order if set, or use menu_order field as fallback
+    $explicit_order = get_post_meta($post->ID, 'module_order', true);
+    $menu_order = $post->menu_order;
+    // Create consistent type naming (convert underscores to hyphens)
+    $type = str_replace('_', '-', $template);
 
     $data = [
         'id' => $post->ID,
@@ -139,120 +144,55 @@ function prepare_module_for_response($post) {
         'featured_image' => $featured_image,
         'date' => $post->post_date,
         'modified' => $post->post_modified,
-        'template' => $template,
+        'type' => $type, // Add this for React components
         'layout' => get_post_meta($post->ID, 'module_layout', true),
-        'full_width' => (bool) get_post_meta($post->ID, 'module_full_width', true),
-        'background_color' => get_post_meta($post->ID, 'module_background_color', true),
+        'fullWidth' => (bool) get_post_meta($post->ID, 'module_full_width', true), // camelCase
+        'backgroundColor' => get_post_meta($post->ID, 'module_background_color', true), // camelCase
         'buttons' => json_decode(get_post_meta($post->ID, 'module_buttons', true), true),
         'categories' => wp_get_post_terms($post->ID, 'module_category', ['fields' => 'names']),
-        'placements' => wp_get_post_terms($post->ID, 'module_placement', ['fields' => 'names'])
+        'placements' => wp_get_post_terms($post->ID, 'module_placement', ['fields' => 'names']),
+        'order' => !empty($explicit_order) ? intval($explicit_order) : $menu_order,
     ];
 
-    // Add template-specific data
+    // Format module-specific data to match React component props
     switch ($template) {
         case 'hero':
-            $data['hero_settings'] = json_decode(get_post_meta($post->ID, 'module_hero_settings', true), true);
+            $hero_settings = json_decode(get_post_meta($post->ID, 'module_hero_settings', true), true) ?: [];
+            $data = array_merge($data, [
+                'intro' => $post->post_excerpt,
+                'image' => $featured_image,
+                'overlayOpacity' => $hero_settings['overlay_opacity'] ?? 0.3,
+                'textColor' => $hero_settings['text_color'] ?? '',
+                'height' => $hero_settings['height'] ?? 'large',
+                'alignment' => $hero_settings['alignment'] ?? 'center',
+            ]);
             break;
 
         case 'selling_points':
-            $data['selling_points'] = json_decode(get_post_meta($post->ID, 'module_selling_points', true), true);
+            $points = json_decode(get_post_meta($post->ID, 'module_selling_points', true), true) ?: [];
+            $data['points'] = $points; // This matches what React expects
+            $data['columns'] = intval(get_post_meta($post->ID, 'module_columns', true) ?: 3);
             break;
 
-        case 'stats':
-            $data['stats'] = json_decode(get_post_meta($post->ID, 'module_stats', true), true);
-            break;
-
-        case 'testimonials':
-            $testimonial_ids = json_decode(get_post_meta($post->ID, 'module_testimonials_ids', true), true) ?: [];
-
-            $testimonials = [];
-            foreach ($testimonial_ids as $id) {
-                $testimonial = get_post($id);
-                if ($testimonial && $testimonial->post_status === 'publish') {
-                    $testimonials[] = [
-                        'id' => $testimonial->ID,
-                        'content' => $testimonial->post_content,
-                        'author_name' => get_post_meta($testimonial->ID, 'author_name', true) ?: $testimonial->post_title,
-                        'author_position' => get_post_meta($testimonial->ID, 'author_position', true),
-                        'author_image' => get_the_post_thumbnail_url($testimonial->ID, 'thumbnail')
-                    ];
-                }
+        case 'cta':
+            // If using buttons array, also extract first button for direct properties
+            if (!empty($data['buttons']) && is_array($data['buttons'])) {
+                $first_button = $data['buttons'][0];
+                $data['buttonText'] = $first_button['text'] ?? '';
+                $data['buttonUrl'] = $first_button['url'] ?? '';
             }
-
-            $data['testimonials'] = $testimonials;
+            $data['description'] = $post->post_content;
             break;
 
-        case 'gallery':
-            $gallery_ids = json_decode(get_post_meta($post->ID, 'module_gallery_ids', true), true) ?: [];
-
-            $gallery = [];
-            foreach ($gallery_ids as $id) {
-                $image_url = wp_get_attachment_image_url($id, 'full');
-                $image_medium = wp_get_attachment_image_url($id, 'medium');
-                $image_thumbnail = wp_get_attachment_image_url($id, 'thumbnail');
-                $attachment = get_post($id);
-
-                if ($image_url) {
-                    $gallery[] = [
-                        'id' => $id,
-                        'url' => $image_url,
-                        'medium' => $image_medium,
-                        'thumbnail' => $image_thumbnail,
-                        'alt' => get_post_meta($id, '_wp_attachment_image_alt', true),
-                        'title' => $attachment ? $attachment->post_title : '',
-                        'caption' => $attachment ? $attachment->post_excerpt : ''
-                    ];
-                }
-            }
-
-            $data['gallery'] = $gallery;
-            break;
+        // Add other module types...
 
         case 'faq':
-            $data['faq_items'] = json_decode(get_post_meta($post->ID, 'module_faq_items', true), true);
+            $data['items'] = json_decode(get_post_meta($post->ID, 'module_faq_items', true), true) ?: [];
+            $data['allowMultipleOpen'] = true; // camelCase
             break;
 
         case 'tabbed_content':
-            $data['tabbed_content'] = json_decode(get_post_meta($post->ID, 'module_tabbed_content', true), true);
-            break;
-
-        case 'charts':
-            $data['chart_type'] = get_post_meta($post->ID, 'module_chart_type', true);
-            $data['chart_data'] = json_decode(get_post_meta($post->ID, 'module_chart_data', true), true);
-            break;
-
-        case 'sharing':
-            $data['sharing_networks'] = json_decode(get_post_meta($post->ID, 'module_sharing_networks', true), true);
-            break;
-
-        case 'login':
-            $data['login_settings'] = json_decode(get_post_meta($post->ID, 'module_login_settings', true), true);
-            break;
-
-        case 'payment':
-            $data['payment_settings'] = json_decode(get_post_meta($post->ID, 'module_payment_settings', true), true);
-            break;
-
-        case 'calendar':
-            $data['calendar_settings'] = json_decode(get_post_meta($post->ID, 'module_calendar_settings', true), true);
-            break;
-
-        case 'video':
-            $data['video_url'] = get_post_meta($post->ID, 'module_video_url', true);
-            break;
-
-        case 'form':
-            $form_id = get_post_meta($post->ID, 'module_form_id', true);
-            $data['form_id'] = $form_id;
-
-            // Get form shortcode if using Contact Form 7
-            if (class_exists('WPCF7_ContactForm') && $form_id) {
-                $form = wpcf7_contact_form($form_id);
-                if ($form) {
-                    $data['form_title'] = $form->title();
-                    $data['form_shortcode'] = '[contact-form-7 id="' . $form_id . '" title="' . esc_attr($form->title()) . '"]';
-                }
-            }
+            $data['tabs'] = json_decode(get_post_meta($post->ID, 'module_tabbed_content', true), true) ?: [];
             break;
     }
 
@@ -325,6 +265,9 @@ function register_page_modules_rest_field() {
                 $page_modules = json_decode(get_post_meta($post['id'], 'page_modules', true), true) ?: [];
                 $modules_data = [];
 
+                // Tracking position for implicit ordering if needed
+                $position = 0;
+
                 foreach ($page_modules as $module_data) {
                     $module_id = $module_data['id'];
                     $module_post = get_post($module_id);
@@ -334,22 +277,27 @@ function register_page_modules_rest_field() {
 
                         // Override settings if needed
                         if (isset($module_data['override_settings']) && $module_data['override_settings']) {
-                            if (isset($module_data['layout'])) {
-                                $module['layout'] = $module_data['layout'];
-                            }
+                            // Existing overrides...
 
-                            if (isset($module_data['full_width'])) {
-                                $module['full_width'] = $module_data['full_width'];
-                            }
-
-                            if (isset($module_data['background_color'])) {
-                                $module['background_color'] = $module_data['background_color'];
+                            // Include explicit order if set in page_modules
+                            if (isset($module_data['order'])) {
+                                $module['order'] = intval($module_data['order']);
+                            } else {
+                                // Use position as implicit order
+                                $module['order'] = $position;
                             }
                         }
 
                         $modules_data[] = $module;
                     }
+
+                    $position++;
                 }
+
+                // Sort modules by order property
+                usort($modules_data, function($a, $b) {
+                    return ($a['order'] ?? 0) - ($b['order'] ?? 0);
+                });
 
                 return $modules_data;
             },

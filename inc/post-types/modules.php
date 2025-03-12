@@ -90,7 +90,7 @@ foreach ($module_components as $component) {
          'update_item'       => __('Update Module Category', 'steget'),
          'add_new_item'      => __('Add New Module Category', 'steget'),
          'new_item_name'     => __('New Module Category Name', 'steget'),
-         'menu_name'         => __('Categories', 'steget'),
+         'menu_name'         => __('ModCats', 'steget'),
      ];
 
      $category_args = [

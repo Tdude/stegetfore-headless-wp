@@ -239,8 +239,6 @@ add_action('init', function() {
 });
 */
 
-
-
 /**
  * This is the simplified approach for CF7 integration
  */
@@ -303,7 +301,6 @@ add_action('rest_api_init', function() {
     ));
 });
 
-
 // Add support for our custom headless CF7 shortcode
 add_shortcode('headless-cf7', function($atts) {
     $atts = shortcode_atts(array(
@@ -320,4 +317,21 @@ add_shortcode('headless-cf7', function($atts) {
         esc_attr($atts['id']),
         esc_attr($atts['id'])
     );
+});
+
+// Ensure proper encoding for API responses
+add_action('init', function() {
+    // Set internal encoding to UTF-8
+    if (function_exists('mb_internal_encoding')) {
+        mb_internal_encoding('UTF-8');
+    }
+});
+
+// Ensure UTF-8 headers for REST API
+add_action('rest_api_init', function() {
+    // Add UTF-8 header to all REST responses
+    add_filter('rest_pre_serve_request', function($served, $result) {
+        header('Content-Type: application/json; charset=utf-8');
+        return $served;
+    }, 10, 2);
 });

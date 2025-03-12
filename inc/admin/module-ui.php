@@ -1377,7 +1377,54 @@ function render_module_buttons_meta_box($post) {
 
 <script type="text/javascript">
 jQuery(document).ready(function($) {
-    // More JavaScript code for button functionality...
+    // Add Button
+    $('.add-button').on('click', function() {
+        var buttonIndex = $('#module_buttons_container .button-item').length;
+        var buttonItem = `
+            <div class="button-item">
+                <h4><?php _e('Button', 'steget'); ?> #${buttonIndex + 1}</h4>
+                <p>
+                    <label><strong><?php _e('Button Text', 'steget'); ?>:</strong></label><br>
+                    <input type="text" name="button_text[]" value="" class="widefat">
+                </p>
+                <p>
+                    <label><strong><?php _e('Button URL', 'steget'); ?>:</strong></label><br>
+                    <input type="url" name="button_url[]" value="" class="widefat">
+                </p>
+                <p>
+                    <label><strong><?php _e('Button Style', 'steget'); ?>:</strong></label><br>
+                    <select name="button_style[]" class="widefat">
+                        <?php foreach ($button_styles as $value => $label) : ?>
+                        <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="button_new_tab[${buttonIndex}]">
+                        <?php _e('Open in new tab', 'steget'); ?>
+                    </label>
+                </p>
+                <button type="button" class="button remove-button"><?php _e('Remove Button', 'steget'); ?></button>
+                <hr>
+            </div>
+        `;
+        $('#module_buttons_container').append(buttonItem);
+    });
+
+    // Remove Button
+    $('#module_buttons_container').on('click', '.remove-button', function() {
+        $(this).closest('.button-item').remove();
+        updateButtonIndices();
+    });
+
+    // Update Button Indices
+    function updateButtonIndices() {
+        $('#module_buttons_container .button-item').each(function(index) {
+            $(this).find('h4').text('<?php _e('Button', 'steget'); ?> #' + (index + 1));
+            $(this).find('input[type="checkbox"]').attr('name', `button_new_tab[${index}]`);
+        });
+    }
 });
 </script>
 <?php

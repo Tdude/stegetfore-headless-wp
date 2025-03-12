@@ -1,6 +1,7 @@
 <?php
 /**
  * inc/rest/endpoints.php
+ * NEEDS CLEANING UP!!!
  */
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -154,7 +155,7 @@ add_action('rest_api_init', function() {
 
 // Startpage endpoints for fewer requests
 function register_homepage_data_endpoint() {
-    register_rest_route('startpage/v1', '/homepage-data', [
+    register_rest_route('startpage/v2', '/homepage-data', [
         'methods' => 'GET',
         'callback' => 'get_homepage_data',
         'permission_callback' => '__return_true',
