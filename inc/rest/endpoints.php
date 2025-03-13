@@ -1,17 +1,17 @@
 <?php
 /**
  * inc/rest/endpoints.php
- * NEEDS CLEANING UP!!!
+ * NEEDS CLEANING UP FROM OLD "SECTIONS"
  */
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-add_action('rest_api_init', function() {
+add_action('rest_api_init', function () {
     // Test endpoint
     register_rest_route('steget/v1', '/test', [
         'methods' => 'GET',
-        'callback' => function() {
+        'callback' => function () {
             return [
                 'status' => 'success',
                 'message' => 'API is working',
@@ -24,7 +24,7 @@ add_action('rest_api_init', function() {
     // Site info endpoint
     register_rest_route('steget/v1', '/site-info', [
         'methods' => 'GET',
-        'callback' => function() {
+        'callback' => function () {
             return [
                 'name' => get_option('blogname'),
                 'description' => get_bloginfo('description'),
@@ -39,14 +39,14 @@ add_action('rest_api_init', function() {
     // Extended posts endpoint
     register_rest_route('steget/v1', '/posts-extended', [
         'methods' => 'GET',
-        'callback' => function($request) {
+        'callback' => function ($request) {
             $posts = get_posts([
                 'post_type' => 'post',
                 'posts_per_page' => 12,
                 'post_status' => 'publish'
             ]);
 
-            return array_map(function($post) {
+            return array_map(function ($post) {
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'full');
                 return [
                     'id' => $post->ID,
@@ -67,7 +67,7 @@ add_action('rest_api_init', function() {
     // Menu endpoint with hierarchical structure
     register_rest_route('steget/v1', '/menu/(?P<location>[a-zA-Z0-9_-]+)', [
         'methods' => 'GET',
-        'callback' => function($request) {
+        'callback' => function ($request) {
             $location = $request['location'];
             $locations = get_nav_menu_locations();
 
@@ -119,7 +119,7 @@ add_action('rest_api_init', function() {
             }
 
             // Clean up - remove parent property since it's no longer needed
-            $clean_items = function(&$items) use (&$clean_items) {
+            $clean_items = function (&$items) use (&$clean_items) {
                 foreach ($items as &$item) {
                     unset($item['parent']);
                     if (!empty($item['children'])) {
@@ -137,9 +137,9 @@ add_action('rest_api_init', function() {
 });
 
 // Add featured image to REST API
-add_action('rest_api_init', function() {
+add_action('rest_api_init', function () {
     register_rest_field('post', 'featured_image_url', [
-        'get_callback' => function($post) {
+        'get_callback' => function ($post) {
             if (has_post_thumbnail($post['id'])) {
                 $img = wp_get_attachment_image_src(
                     get_post_thumbnail_id($post['id']),
@@ -154,51 +154,19 @@ add_action('rest_api_init', function() {
 
 
 // Startpage endpoints for fewer requests
-function register_homepage_data_endpoint() {
-    register_rest_route('startpage/v2', '/homepage-data', [
-        'methods' => 'GET',
-        'callback' => 'get_homepage_data',
-        'permission_callback' => '__return_true',
-    ]);
-}
-add_action('rest_api_init', 'register_homepage_data_endpoint');
-
-
-
-function get_homepage_data() {
-    // Show deprecation notice in the REST API response
-    $deprecated_notice = 'This endpoint is deprecated. Please use /startpage/v2/homepage-data instead.';
-
-    $homepage_id = get_option('page_on_front');
-
-    // Include feature API files
-    require_once get_template_directory() . '/inc/features/hero-api.php';
-    require_once get_template_directory() . '/inc/features/posts-api.php';
-    require_once get_template_directory() . '/inc/features/testimonials-api.php';
-    require_once get_template_directory() . '/inc/features/cta-api.php';
-
-    // Use the new modular functions but maintain the original format
-    return [
-        'hero' => get_hero_data($homepage_id),
-        'featured_posts' => get_featured_posts_data(),
-        'featured_posts_title' => 'Nytt från bloggen',
-        'cta' => get_cta_data($homepage_id),
-        'testimonials' => get_testimonials_data(),
-        'testimonials_title' => 'Vad våra klienter säger',
-        '_deprecated' => $deprecated_notice
-    ];
-}
-
-function register_homepage_data_v2_endpoint() {
+function register_homepage_data_endpoint()
+{
     register_rest_route('startpage/v2', '/homepage-data', [
         'methods' => 'GET',
         'callback' => 'get_homepage_data_v2',
         'permission_callback' => '__return_true',
     ]);
 }
-add_action('rest_api_init', 'register_homepage_data_v2_endpoint');
+add_action('rest_api_init', 'register_homepage_data_endpoint');
 
-function get_homepage_data_v2() {
+
+function get_homepage_data_v2()
+{
     $homepage_id = get_option('page_on_front');
 
     // Include all feature API files if not already included
@@ -210,9 +178,20 @@ function get_homepage_data_v2() {
     return [
         'hero' => get_hero_data($homepage_id),
         'featured_posts' => get_featured_posts_data(),
-        'featured_posts_title' => 'Nytt från bloggen',
+        'featured_posts_title' => 'I fokus',
         'cta' => get_cta_data($homepage_id),
         'testimonials' => get_testimonials_data(),
         'testimonials_title' => 'Vad våra klienter säger'
     ];
 }
+
+// General UTF-8 encoding filter for REST API responses
+function steget_ensure_utf8_encoding_rest($response, $handler, $request)
+{
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    return $response;
+}
+add_filter('rest_pre_echo_response', 'steget_ensure_utf8_encoding_rest', 10, 3);

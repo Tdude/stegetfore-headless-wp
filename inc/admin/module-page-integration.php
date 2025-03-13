@@ -143,9 +143,15 @@ jQuery(document).ready(function($) {
                 module_id: moduleId,
                 nonce: '<?php echo wp_create_nonce('get_module_info'); ?>'
             },
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            dataType: 'json',
             success: function(response) {
                 if (response.success) {
                     var moduleData = response.data;
+                    // Fix double encoding of special characters
+                    var decodedTitle = $('<div/>').html(moduleData.title).text();
+                    var decodedTemplateName = $('<div/>').html(moduleData.template_name)
+                        .text();
 
                     var template = `
                             <div class="module-item" data-id="${moduleData.id}">
@@ -237,6 +243,11 @@ jQuery(document).ready(function($) {
                 ']');
             $(this).find('input[name^="module_background_color"]').attr('name',
                 'module_background_color[' + index + ']');
+
+            // Add order field
+            $(this).find('input[name^="module_order"]').remove(); // Remove any existing
+            $(this).append('<input type="hidden" name="module_order[' + index + ']" value="' + index +
+                '">');
         });
     }
 
@@ -337,6 +348,9 @@ function get_module_info_ajax() {
     $template = get_post_meta($module_id, 'module_template', true);
     $templates = get_module_templates();
 
+    // Force UTF-8 encoding
+    header('Content-Type: application/json; charset=utf-8');
+
     wp_send_json_success([
         'id' => $module->ID,
         'title' => $module->post_title,
@@ -345,7 +359,6 @@ function get_module_info_ajax() {
         'edit_url' => get_edit_post_link($module->ID, '')
     ]);
 }
-add_action('wp_ajax_get_module_info', 'get_module_info_ajax');
 
 /**
  * Save page modules association
@@ -372,7 +385,8 @@ function save_page_modules($post_id) {
 
         foreach ($_POST['module_id'] as $index => $module_id) {
             $module_data = [
-                'id' => intval($module_id)
+                'id' => intval($module_id),
+                'order' => $index
             ];
 
             // Check if overriding settings
@@ -395,7 +409,31 @@ function save_page_modules($post_id) {
             $modules[] = $module_data;
         }
 
-        update_post_meta($post_id, 'page_modules', json_encode($modules));
+        // Use direct database update to avoid encoding issues
+        global $wpdb;
+        $json_data = wp_json_encode($modules, JSON_UNESCAPED_UNICODE);
+
+        $meta_exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'page_modules'",
+            $post_id
+        ));
+
+        if ($meta_exists) {
+            $wpdb->update(
+                $wpdb->postmeta,
+                ['meta_value' => $json_data],
+                ['post_id' => $post_id, 'meta_key' => 'page_modules']
+            );
+        } else {
+            $wpdb->insert(
+                $wpdb->postmeta,
+                [
+                    'post_id' => $post_id,
+                    'meta_key' => 'page_modules',
+                    'meta_value' => $json_data
+                ]
+            );
+        }
     } else {
         // No modules selected, clear the meta
         delete_post_meta($post_id, 'page_modules');

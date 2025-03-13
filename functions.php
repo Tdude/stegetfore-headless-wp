@@ -3,7 +3,8 @@
  * functions.php
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH'))
+    exit;
 
 /**
  * DIAGNOSTIC - CAREFUL: Temporarily test email on EVERY load
@@ -35,7 +36,8 @@ add_action('rest_api_init', 'list_all_registered_routes', 999);
 */
 
 // Theme Setup
-function headless_theme_setup() {
+function headless_theme_setup()
+{
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');
     add_theme_support('custom-logo');
@@ -51,15 +53,18 @@ add_action('after_setup_theme', 'headless_theme_setup');
 
 // CORS header for REST API
 // Update this function in your functions.php
-function add_cors_headers() {
+function add_cors_headers()
+{
     // Add Access-Control-Allow-Origin header
     $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
     // You may want to limit this to specific origins in production
     // For development, allow localhost
-    if ($http_origin == "http://localhost:3000" ||
+    if (
+        $http_origin == "http://localhost:3000" ||
         $http_origin == "https://localhost:3000" ||
-        strpos($http_origin, 'stegetfore.nu') !== false) {
+        strpos($http_origin, 'stegetfore.nu') !== false
+    ) {
         header("Access-Control-Allow-Origin: $http_origin");
     } else {
         header("Access-Control-Allow-Origin: *");
@@ -79,7 +84,7 @@ function add_cors_headers() {
 }
 
 // Make sure this function is called for REST requests
-add_action('rest_api_init', function() {
+add_action('rest_api_init', function () {
     // Remove the previous send_headers action if it exists
     remove_action('send_headers', 'add_cors_headers');
 
@@ -92,8 +97,7 @@ add_action('send_headers', 'add_cors_headers');
 
 // Load theme components
 $required_files = [
-    '/inc/post-types/portfolio.php',
-    '/inc/post-types/testimonials.php',
+    //'/inc/post-types/portfolio.php',
     '/inc/post-types/evaluation.php',
     '/inc/post-types/modules.php',
     '/inc/meta-fields/register-meta.php',
@@ -102,22 +106,19 @@ $required_files = [
     '/inc/rest/module-endpoints.php',
 
     // Feature files
-    '/inc/features/hero.php',
-    '/inc/features/hero-api.php',
-    '/inc/features/selling-points.php',
-    '/inc/features/selling-points-api.php',
-    '/inc/features/testimonials.php',
-    '/inc/features/testimonials-api.php',
-    '/inc/features/cta.php',
-    '/inc/features/cta-api.php',
+    //'/inc/features/hero.php',
+    //'/inc/features/hero-api.php',
+    //'/inc/features/selling-points.php',
+    //'/inc/features/selling-points-api.php',
+    //'/inc/features/cta.php',
+    //'/inc/features/cta-api.php',
     '/inc/features/posts-api.php',
-
     '/inc/admin/theme-options.php'
 ];
 
 /**
  * Load n log included files
-*/
+ */
 
 foreach ($required_files as $file) {
     $file_path = get_template_directory() . $file;
@@ -132,7 +133,8 @@ foreach ($required_files as $file) {
 
 
 // Caching. This could live in its own plugin
-function trigger_nextjs_revalidation($post_id) {
+function trigger_nextjs_revalidation($post_id)
+{
     // Skip if this is an autosave
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
@@ -170,12 +172,13 @@ function trigger_nextjs_revalidation($post_id) {
 add_action('save_post', 'trigger_nextjs_revalidation');
 
 // Trigger on menu update
-add_action('wp_update_nav_menu', function($menu_id) {
+add_action('wp_update_nav_menu', function ($menu_id) {
     trigger_nextjs_revalidation(null);  // Revalidate home page on menu changes
 });
 
 // Add settings page for Next.js URL and token
-function nextjs_settings_init() {
+function nextjs_settings_init()
+{
     register_setting('general', 'nextjs_url');
     register_setting('general', 'nextjs_token');
 
@@ -189,7 +192,7 @@ function nextjs_settings_init() {
     add_settings_field(
         'nextjs_url',
         'Next.js App URL',
-        function() {
+        function () {
             $value = get_option('nextjs_url');
             echo "<input type='text' name='nextjs_url' value='$value' class='regular-text'>";
         },
@@ -200,7 +203,7 @@ function nextjs_settings_init() {
     add_settings_field(
         'nextjs_token',
         'Revalidation Token',
-        function() {
+        function () {
             $value = get_option('nextjs_token');
             echo "<input type='text' name='nextjs_token' value='$value' class='regular-text'>";
         },
@@ -211,13 +214,15 @@ function nextjs_settings_init() {
 add_action('admin_init', 'nextjs_settings_init');
 
 // If we need to remove styles from plugins
-function headless_theme_dequeue_plugin_styles() {
+function headless_theme_dequeue_plugin_styles()
+{
     wp_dequeue_style('plugin-style-handle');
 }
 add_action('wp_enqueue_scripts', 'headless_theme_dequeue_plugin_styles', 20);
 
 // For inc/post-types/evaluation.php
-function enqueue_evaluation_scripts() {
+function enqueue_evaluation_scripts()
+{
     wp_enqueue_script('evaluation-form', get_template_directory_uri() . '/js/evaluation-form.js', [], '1.0', true);
     wp_localize_script('evaluation-form', 'wpApiSettings', [
         'nonce' => wp_create_nonce('wp_rest'),
@@ -230,7 +235,7 @@ add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
 /**
  * Included Contact Form 7 custom endpoints to functions.php
  */
-if ( defined( 'WPCF7_VERSION' ) ) {
+if (defined('WPCF7_VERSION')) {
     require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
 }
 /*
@@ -242,7 +247,7 @@ add_action('init', function() {
 /**
  * This is the simplified approach for CF7 integration
  */
-add_filter('rest_prepare_page', function($response, $post, $request) {
+add_filter('rest_prepare_page', function ($response, $post, $request) {
     $data = $response->get_data();
 
     // Process only if we have content
@@ -279,9 +284,9 @@ add_filter('rest_prepare_page', function($response, $post, $request) {
 }, 10, 3);
 
 // Register form ID in REST API for easier access
-add_action('rest_api_init', function() {
+add_action('rest_api_init', function () {
     register_rest_field('page', 'cf7_form_id', array(
-        'get_callback' => function($post) {
+        'get_callback' => function ($post) {
             $content = get_post_field('post_content', $post['id']);
 
             // Check for CF7 shortcode
@@ -302,7 +307,7 @@ add_action('rest_api_init', function() {
 });
 
 // Add support for our custom headless CF7 shortcode
-add_shortcode('headless-cf7', function($atts) {
+add_shortcode('headless-cf7', function ($atts) {
     $atts = shortcode_atts(array(
         'id' => '',
     ), $atts);
@@ -320,7 +325,7 @@ add_shortcode('headless-cf7', function($atts) {
 });
 
 // Ensure proper encoding for API responses
-add_action('init', function() {
+add_action('init', function () {
     // Set internal encoding to UTF-8
     if (function_exists('mb_internal_encoding')) {
         mb_internal_encoding('UTF-8');
@@ -328,9 +333,9 @@ add_action('init', function() {
 });
 
 // Ensure UTF-8 headers for REST API
-add_action('rest_api_init', function() {
+add_action('rest_api_init', function () {
     // Add UTF-8 header to all REST responses
-    add_filter('rest_pre_serve_request', function($served, $result) {
+    add_filter('rest_pre_serve_request', function ($served, $result) {
         header('Content-Type: application/json; charset=utf-8');
         return $served;
     }, 10, 2);

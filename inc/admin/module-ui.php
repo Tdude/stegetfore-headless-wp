@@ -164,20 +164,23 @@ jQuery(document).ready(function($) {
              render_payment_template_fields($post);
              break;
          case 'calendar':
-             render_calendar_template_fields($post);
-             break;
+            render_calendar_template_fields($post);
+            break;
          case 'cta':
-             render_cta_template_fields($post);
-             break;
+            render_cta_template_fields($post);
+            break;
          case 'text_media':
-             render_text_media_template_fields($post);
-             break;
+            render_text_media_template_fields($post);
+            break;
          case 'video':
-             render_video_template_fields($post);
-             break;
+            render_video_template_fields($post);
+            break;
          case 'form':
-             render_form_template_fields($post);
-             break;
+            render_form_template_fields($post);
+            break;
+        case 'featured-posts':
+            render_featured_posts_template_fields($post);
+            break;
          default:
              echo '<p>' . __('No additional settings for this template type.', 'steget') . '</p>';
      }
@@ -391,37 +394,106 @@ jQuery(document).ready(function($) {
  /**
   * Render testimonials template fields
   */
- function render_testimonials_template_fields($post) {
-     $testimonial_ids = json_decode(get_post_meta($post->ID, 'module_testimonials_ids', true), true) ?: [];
-     $testimonials = get_posts([
-         'post_type' => 'testimonial',
-         'posts_per_page' => -1,
-         'post_status' => 'publish'
-     ]);
-     ?>
+function render_testimonials_template_fields($post) {
+    $testimonials = json_decode(get_post_meta($post->ID, 'module_testimonials', true), true) ?: [
+        ['author_name' => '', 'author_position' => '', 'content' => '', 'author_image' => '']
+    ];
+    ?>
 <div id="testimonials_fields" class="template-fields">
-    <p>
-        <label><strong><?php _e('Select Testimonials', 'steget'); ?>:</strong></label><br>
-        <select name="testimonial_ids[]" multiple="multiple" class="testimonial-select widefat"
-            style="min-height: 150px;">
-            <?php foreach ($testimonials as $testimonial) : ?>
-            <option value="<?php echo esc_attr($testimonial->ID); ?>"
-                <?php echo in_array($testimonial->ID, $testimonial_ids) ? 'selected' : ''; ?>>
-                <?php echo esc_html($testimonial->post_title); ?>
-            </option>
-            <?php endforeach; ?>
-        </select>
-        <span class="description"><?php _e('Hold Ctrl/Cmd to select multiple testimonials', 'steget'); ?></span>
-    </p>
+    <div id="testimonials_container">
+        <?php foreach ($testimonials as $index => $testimonial) : ?>
+        <div class="testimonial-item">
+            <h4><?php _e('Testimonial', 'steget'); ?> #<?php echo $index + 1; ?></h4>
+            <p>
+                <label><strong><?php _e('Author Name', 'steget'); ?>:</strong></label><br>
+                <input type="text" name="testimonial_author_name[]"
+                    value="<?php echo esc_attr($testimonial['author_name']); ?>" class="widefat">
+            </p>
+            <p>
+                <label><strong><?php _e('Author Position', 'steget'); ?>:</strong></label><br>
+                <input type="text" name="testimonial_author_position[]"
+                    value="<?php echo esc_attr($testimonial['author_position']); ?>" class="widefat">
+            </p>
+            <p>
+                <label><strong><?php _e('Content', 'steget'); ?>:</strong></label><br>
+                <textarea name="testimonial_content[]" rows="4"
+                    class="widefat"><?php echo esc_textarea($testimonial['content']); ?></textarea>
+            </p>
+            <p>
+                <label><strong><?php _e('Author Image', 'steget'); ?>:</strong></label><br>
+            <div class="steget-media-field">
+                <input type="hidden" name="testimonial_author_image[]"
+                    value="<?php echo esc_attr($testimonial['author_image']); ?>" class="steget-media-input" />
+                <div class="steget-image-preview" style="max-width: 100px; margin-bottom: 10px;">
+                    <?php if (!empty($testimonial['author_image'])) : ?>
+                    <img src="<?php echo esc_url($testimonial['author_image']); ?>"
+                        style="max-width: 100%; height: auto;" />
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="button steget-upload-image"><?php _e('Select Image', 'steget'); ?></button>
+                <button type="button" class="button steget-remove-image"
+                    <?php echo empty($testimonial['author_image']) ? 'style="display:none;"' : ''; ?>><?php _e('Remove Image', 'steget'); ?></button>
+            </div>
+            </p>
+            <button type="button" class="button steget-remove-testimonial"><?php _e('Remove', 'steget'); ?></button>
+            <hr>
+        </div>
+        <?php endforeach; ?>
+    </div>
 
-    <p>
-        <a href="<?php echo admin_url('post-new.php?post_type=testimonial'); ?>" class="button" target="_blank">
-            <?php _e('Add New Testimonial', 'steget'); ?>
-        </a>
-    </p>
+    <button type="button"
+        class="button button-primary add-testimonial"><?php _e('Add Testimonial', 'steget'); ?></button>
+
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        // Add new testimonial
+        $('.add-testimonial').on('click', function() {
+            var count = $('.testimonial-item').length + 1;
+            var template = `
+                <div class="testimonial-item">
+                    <h4><?php _e('Testimonial', 'steget'); ?> #${count}</h4>
+                    <p>
+                        <label><strong><?php _e('Author Name', 'steget'); ?>:</strong></label><br>
+                        <input type="text" name="testimonial_author_name[]" value="" class="widefat">
+                    </p>
+                    <p>
+                        <label><strong><?php _e('Author Position', 'steget'); ?>:</strong></label><br>
+                        <input type="text" name="testimonial_author_position[]" value="" class="widefat">
+                    </p>
+                    <p>
+                        <label><strong><?php _e('Content', 'steget'); ?>:</strong></label><br>
+                        <textarea name="testimonial_content[]" rows="4" class="widefat"></textarea>
+                    </p>
+                    <p>
+                        <label><strong><?php _e('Author Image', 'steget'); ?>:</strong></label><br>
+                        <div class="steget-media-field">
+                            <input type="hidden" name="testimonial_author_image[]" value="" class="steget-media-input" />
+                            <div class="steget-image-preview" style="max-width: 100px; margin-bottom: 10px;"></div>
+                            <button type="button" class="button steget-upload-image"><?php _e('Select Image', 'steget'); ?></button>
+                            <button type="button" class="button steget-remove-image" style="display:none;"><?php _e('Remove Image', 'steget'); ?></button>
+                        </div>
+                    </p>
+                    <button type="button" class="button steget-remove-testimonial"><?php _e('Remove', 'steget'); ?></button>
+                    <hr>
+                </div>
+            `;
+            $('#testimonials_container').append(template);
+        });
+
+        // Remove testimonial
+        $(document).on('click', '.steget-remove-testimonial', function() {
+            $(this).closest('.testimonial-item').remove();
+
+            // Renumber the testimonials
+            $('.testimonial-item h4').each(function(index) {
+                $(this).text('<?php _e('Testimonial', 'steget'); ?> #' + (index + 1));
+            });
+        });
+    });
+    </script>
 </div>
 <?php
- }
+}
 
  /**
   * Render gallery template fields
@@ -1328,6 +1400,108 @@ jQuery(document).ready(function($) {
 
 <?php
  }
+
+/**
+ * Render featured posts template fields
+ */
+function render_featured_posts_template_fields($post) {
+    $settings = json_decode(get_post_meta($post->ID, 'module_featured_posts_settings', true), true) ?: [
+        'title' => '',
+        'subtitle' => '',
+        'categories' => [],
+        'post_count' => 6,
+        'display_style' => 'grid',
+        'show_date' => true,
+        'show_excerpt' => true,
+        'show_author' => false
+    ];
+
+    // Get all categories
+    $categories = get_categories([
+        'hide_empty' => false,
+        'orderby' => 'name',
+        'order' => 'ASC'
+    ]);
+    ?>
+<div id="featured_posts_fields" class="template-fields">
+    <p>
+        <label for="featured_posts_title"><strong><?php _e('Section Title', 'steget'); ?>:</strong></label><br>
+        <input type="text" name="featured_posts_title" id="featured_posts_title"
+            value="<?php echo esc_attr($settings['title']); ?>" class="widefat">
+    </p>
+
+    <p>
+        <label for="featured_posts_subtitle"><strong><?php _e('Section Subtitle', 'steget'); ?>:</strong></label><br>
+        <input type="text" name="featured_posts_subtitle" id="featured_posts_subtitle"
+            value="<?php echo esc_attr($settings['subtitle']); ?>" class="widefat">
+    </p>
+
+    <div class="category-selection-panel">
+        <p>
+            <label><strong><?php _e('Select Categories', 'steget'); ?>:</strong></label>
+        </p>
+        <div class="category-checklist"
+            style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+            <?php foreach ($categories as $category) : ?>
+            <label style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" name="featured_posts_categories[]"
+                    value="<?php echo esc_attr($category->term_id); ?>"
+                    <?php echo in_array($category->term_id, $settings['categories']) ? 'checked' : ''; ?>>
+                <?php echo esc_html($category->name); ?>
+                <span class="post-count">(<?php echo $category->count; ?> posts)</span>
+            </label>
+            <?php endforeach; ?>
+        </div>
+        <p class="description">
+            <?php _e('Select categories to include in this module. Leave all unchecked to include posts from all categories.', 'steget'); ?>
+        </p>
+    </div>
+
+    <p>
+        <label
+            for="featured_posts_count"><strong><?php _e('Number of Posts to Display', 'steget'); ?>:</strong></label><br>
+        <select name="featured_posts_count" id="featured_posts_count" class="widefat">
+            <?php for ($i = 1; $i <= 20; $i++) : ?>
+            <option value="<?php echo $i; ?>" <?php selected($settings['post_count'], $i); ?>>
+                <?php echo $i; ?>
+            </option>
+            <?php endfor; ?>
+        </select>
+    </p>
+
+    <p>
+        <label for="featured_posts_display"><strong><?php _e('Display Style', 'steget'); ?>:</strong></label><br>
+        <select name="featured_posts_display" id="featured_posts_display" class="widefat">
+            <option value="grid" <?php selected($settings['display_style'], 'grid'); ?>><?php _e('Grid', 'steget'); ?>
+            </option>
+            <option value="list" <?php selected($settings['display_style'], 'list'); ?>><?php _e('List', 'steget'); ?>
+            </option>
+            <option value="carousel" <?php selected($settings['display_style'], 'carousel'); ?>>
+                <?php _e('Carousel', 'steget'); ?></option>
+        </select>
+    </p>
+
+    <div class="display-options-panel"
+        style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+        <h4 style="margin-top: 0;"><?php _e('Display Options', 'steget'); ?></h4>
+        <label style="display: block; margin-bottom: 10px;">
+            <input type="checkbox" name="featured_posts_show_date" <?php checked($settings['show_date'], true); ?>>
+            <?php _e('Show Date', 'steget'); ?>
+        </label>
+        <label style="display: block; margin-bottom: 10px;">
+            <input type="checkbox" name="featured_posts_show_excerpt"
+                <?php checked($settings['show_excerpt'], true); ?>>
+            <?php _e('Show Excerpt', 'steget'); ?>
+        </label>
+        <label style="display: block;">
+            <input type="checkbox" name="featured_posts_show_author" <?php checked($settings['show_author'], true); ?>>
+            <?php _e('Show Author', 'steget'); ?>
+        </label>
+    </div>
+</div>
+<?php
+}
+
  /**
  * Render module buttons meta box
  */
@@ -1427,6 +1601,7 @@ jQuery(document).ready(function($) {
     }
 });
 </script>
+
 <?php
 }
 /**
@@ -1502,7 +1677,7 @@ function save_module_meta($post_id) {
                 ];
             }
         }
-        update_post_meta($post_id, 'module_buttons', json_encode($buttons));
+        update_post_meta($post_id, 'module_buttons', wp_slash(json_encode($buttons)));
     }
 
     // Save template-specific fields based on selected template
@@ -1515,7 +1690,7 @@ function save_module_meta($post_id) {
                 'overlay_opacity' => (float) $_POST['hero_overlay_opacity'],
                 'text_color' => sanitize_text_field($_POST['hero_text_color'])
             ];
-            update_post_meta($post_id, 'module_hero_settings', json_encode($hero_settings));
+            update_post_meta($post_id, 'module_hero_settings', wp_slash(json_encode($hero_settings)));
             break;
 
         case 'selling_points':
@@ -1531,7 +1706,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_selling_points', json_encode($selling_points));
+            update_post_meta($post_id, 'module_selling_points', wp_slash(json_encode($selling_points)));
             break;
 
         case 'stats':
@@ -1547,12 +1722,24 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_stats', json_encode($stats));
+            update_post_meta($post_id, 'module_stats', wp_slash(json_encode($stats)));
             break;
 
         case 'testimonials':
-            $testimonial_ids = isset($_POST['testimonial_ids']) ? array_map('intval', $_POST['testimonial_ids']) : [];
-            update_post_meta($post_id, 'module_testimonials_ids', json_encode($testimonial_ids));
+            $testimonials = [];
+            if (isset($_POST['testimonial_author_name']) && is_array($_POST['testimonial_author_name'])) {
+                for ($i = 0; $i < count($_POST['testimonial_author_name']); $i++) {
+                    if (!empty($_POST['testimonial_author_name'][$i]) || !empty($_POST['testimonial_content'][$i])) {
+                        $testimonials[] = [
+                            'author_name' => wp_kses_post($_POST['testimonial_author_name'][$i]),
+                            'author_position' => wp_kses_post($_POST['testimonial_author_position'][$i]),
+                            'content' => wp_kses_post($_POST['testimonial_content'][$i]),
+                            'author_image' => esc_url_raw($_POST['testimonial_author_image'][$i])
+                        ];
+                    }
+                }
+            }
+            update_post_meta($post_id, 'module_testimonials', wp_slash(json_encode($testimonials)));
             break;
 
         case 'gallery':
@@ -1561,7 +1748,7 @@ function save_module_meta($post_id) {
                 $gallery_ids = explode(',', sanitize_text_field($_POST['gallery_ids']));
                 $gallery_ids = array_map('intval', $gallery_ids);
             }
-            update_post_meta($post_id, 'module_gallery_ids', json_encode($gallery_ids));
+            update_post_meta($post_id, 'module_gallery_ids', wp_slash(json_encode($gallery_ids)));
             break;
 
         case 'faq':
@@ -1576,7 +1763,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_faq_items', json_encode($faq_items));
+            update_post_meta($post_id, 'module_faq_items', wp_slash(json_encode($faq_items)));
             break;
 
         case 'tabbed_content':
@@ -1591,7 +1778,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_tabbed_content', json_encode($tabs));
+            update_post_meta($post_id, 'module_tabbed_content', wp_slash(json_encode($tabs)));
             break;
 
         case 'charts':
@@ -1618,7 +1805,7 @@ function save_module_meta($post_id) {
                 'datasets' => $datasets
             ];
 
-            update_post_meta($post_id, 'module_chart_data', json_encode($chart_data));
+            update_post_meta($post_id, 'module_chart_data', wp_slash(json_encode($chart_data)));
             break;
 
         case 'sharing':
@@ -1630,7 +1817,7 @@ function save_module_meta($post_id) {
                 'email' => isset($_POST['sharing_network_email']),
                 'whatsapp' => isset($_POST['sharing_network_whatsapp'])
             ];
-            update_post_meta($post_id, 'module_sharing_networks', json_encode($networks));
+            update_post_meta($post_id, 'module_sharing_networks', wp_slash(json_encode($networks)));
             break;
 
         case 'login':
@@ -1639,7 +1826,7 @@ function save_module_meta($post_id) {
                 'show_register' => isset($_POST['login_show_register']),
                 'show_lost_password' => isset($_POST['login_show_lost_password'])
             ];
-            update_post_meta($post_id, 'module_login_settings', json_encode($login_settings));
+            update_post_meta($post_id, 'module_login_settings', wp_slash(json_encode($login_settings)));
             break;
 
         case 'payment':
@@ -1651,7 +1838,7 @@ function save_module_meta($post_id) {
                 'success_url' => esc_url_raw($_POST['payment_success_url']),
                 'cancel_url' => esc_url_raw($_POST['payment_cancel_url'])
             ];
-            update_post_meta($post_id, 'module_payment_settings', json_encode($payment_settings));
+            update_post_meta($post_id, 'module_payment_settings', wp_slash(json_encode($payment_settings)));
             break;
 
         case 'calendar':
@@ -1670,7 +1857,7 @@ function save_module_meta($post_id) {
                 'disabled_dates' => $disabled_dates,
                 'available_times' => $available_times
             ];
-            update_post_meta($post_id, 'module_calendar_settings', json_encode($calendar_settings));
+            update_post_meta($post_id, 'module_calendar_settings', wp_slash(json_encode($calendar_settings)));
             break;
 
         case 'video':
@@ -1679,6 +1866,20 @@ function save_module_meta($post_id) {
 
         case 'form':
             update_post_meta($post_id, 'module_form_id', sanitize_text_field($_POST['form_id']));
+            break;
+
+        case 'featured_posts':
+            $featured_posts_settings = [
+                'title' => sanitize_text_field($_POST['featured_posts_title']),
+                'subtitle' => sanitize_text_field($_POST['featured_posts_subtitle']),
+                'categories' => isset($_POST['featured_posts_categories']) ? array_map('intval', $_POST['featured_posts_categories']) : [],
+                'post_count' => intval($_POST['featured_posts_count']),
+                'display_style' => sanitize_text_field($_POST['featured_posts_display']),
+                'show_date' => isset($_POST['featured_posts_show_date']),
+                'show_excerpt' => isset($_POST['featured_posts_show_excerpt']),
+                'show_author' => isset($_POST['featured_posts_show_author'])
+            ];
+            update_post_meta($post_id, 'module_featured_posts_settings', json_encode($featured_posts_settings));
             break;
     }
 }
