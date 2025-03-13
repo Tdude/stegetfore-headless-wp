@@ -178,7 +178,7 @@ jQuery(document).ready(function($) {
          case 'form':
             render_form_template_fields($post);
             break;
-        case 'featured-posts':
+        case 'featured_posts':
             render_featured_posts_template_fields($post);
             break;
          default:
