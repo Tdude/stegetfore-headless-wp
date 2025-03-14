@@ -258,7 +258,7 @@ function prepare_module_for_response($post)
                         'link' => get_permalink($post_item->ID),
                         'slug' => $post_item->post_name,
                         'featured_image' => $featured_image ?: null,
-                        'categories' => wp_get_post_categories($post_item->ID, ['fields' => 'names']),
+                        'categories' => wp_get_post_categories($post_item->ID, ['fields' => 'slugs']),
                     ];
 
                     // Add author info if requested
