@@ -256,6 +256,7 @@ function prepare_module_for_response($post)
                         'content' => $post_item->post_content,
                         'date' => get_the_date('c', $post_item),
                         'link' => get_permalink($post_item->ID),
+                        'slug' => $post_item->post_name,
                         'featured_image' => $featured_image ?: null,
                         'categories' => wp_get_post_categories($post_item->ID, ['fields' => 'names']),
                     ];
