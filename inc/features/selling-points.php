@@ -1,9 +1,10 @@
 <?php
 /**
  * inc/features/selling-points.php
-*/
+ */
 
-function register_selling_points_metabox() {
+function register_selling_points_metabox()
+{
     add_meta_box(
         'selling_points_metabox',
         'Selling Points Section',
@@ -15,13 +16,14 @@ function register_selling_points_metabox() {
     );
 }
 
-function register_selling_points_fields() {
+function register_selling_points_fields()
+{
     register_meta('post', 'selling_points_title', [
         'type' => 'string',
         'description' => 'Selling Points section title',
         'single' => true,
         'show_in_rest' => true,
-        'auth_callback' => function() {
+        'auth_callback' => function () {
             return current_user_can('edit_posts');
         }
     ]);
@@ -32,13 +34,14 @@ function register_selling_points_fields() {
         'single' => true,
         'show_in_rest' => true,
         'sanitize_callback' => 'sanitize_text_field',
-        'auth_callback' => function() {
+        'auth_callback' => function () {
             return current_user_can('edit_posts');
         }
     ]);
 }
 
-function render_selling_points_metabox($post) {
+function render_selling_points_metabox($post)
+{
     wp_nonce_field('save_selling_points_meta', 'selling_points_meta_nonce');
 
     $selling_points_title = get_post_meta($post->ID, 'selling_points_title', true);
@@ -113,7 +116,8 @@ jQuery(document).ready(function($) {
 add_action('add_meta_boxes', 'register_selling_points_metabox');
 
 
-function save_selling_points_meta($post_id) {
+function save_selling_points_meta($post_id)
+{
     // Check if nonce is set
     if (!isset($_POST['selling_points_meta_nonce'])) {
         return;
@@ -153,7 +157,7 @@ function save_selling_points_meta($post_id) {
             }
         }
 
-        update_post_meta($post_id, 'selling_points', json_encode($selling_points));
+        update_post_meta($post_id, 'selling_points', wp_json_encode($selling_points, JSON_UNESCAPED_UNICODE));
     }
 }
 

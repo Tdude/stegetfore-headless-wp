@@ -153,6 +153,21 @@ function prepare_module_for_response($post)
     $type_priority = isset($type_priorities[$type]) ? $type_priorities[$type] : 0;
     $existing_order = !empty($explicit_order) ? intval($explicit_order) : $menu_order;
 
+    // For JSON fields, properly decode to remove excessive slashes
+    $json_fields = ['buttons', 'selling_points', 'stats', 'testimonials', 'faq_items', 'tabbed_content'];
+    foreach ($json_fields as $field) {
+        $meta_key = 'module_' . $field;
+        $meta_value = get_post_meta($post->ID, $meta_key, true);
+
+        if (!empty($meta_value)) {
+            // Strip slashes if needed and decode the JSON
+            $decoded = json_decode(stripslashes_deep($meta_value), true);
+            if (is_array($decoded)) {
+                $data[$field] = $decoded;
+            }
+        }
+    }
+
     $data = [
         'id' => $post->ID,
         'title' => $post->post_title,
@@ -166,7 +181,7 @@ function prepare_module_for_response($post)
         'fullWidth' => (bool) get_post_meta($post->ID, 'module_full_width', true), // camelCase
         'backgroundColor' => get_post_meta($post->ID, 'module_background_color', true), // camelCase
         'buttons' => json_decode(get_post_meta($post->ID, 'module_buttons', true), true),
-        'categories' => wp_get_post_terms($post->ID, 'module_category', ['fields' => 'names']),
+        'categories' => wp_get_post_terms($post->ID, 'module_category', ['fields' => 'slugs']),
         'placements' => wp_get_post_terms($post->ID, 'module_placement', ['fields' => 'names']),
         'type' => $type,
         // Use type priority as primary sort, existing order as secondary
@@ -258,7 +273,7 @@ function prepare_module_for_response($post)
                         'link' => get_permalink($post_item->ID),
                         'slug' => $post_item->post_name,
                         'featured_image' => $featured_image ?: null,
-                        'categories' => wp_get_post_categories($post_item->ID, ['fields' => 'slugs']),
+                        'categories' => wp_get_post_categories($post_item->ID, ['fields' => 'names']),
                     ];
 
                     // Add author info if requested

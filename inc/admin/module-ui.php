@@ -1677,7 +1677,7 @@ function save_module_meta($post_id) {
                 ];
             }
         }
-        update_post_meta($post_id, 'module_buttons', wp_slash(json_encode($buttons)));
+        update_post_meta($post_id, 'module_buttons', wp_json_encode($buttons, JSON_UNESCAPED_UNICODE));
     }
 
     // Save template-specific fields based on selected template
@@ -1690,7 +1690,7 @@ function save_module_meta($post_id) {
                 'overlay_opacity' => (float) $_POST['hero_overlay_opacity'],
                 'text_color' => sanitize_text_field($_POST['hero_text_color'])
             ];
-            update_post_meta($post_id, 'module_hero_settings', wp_slash(json_encode($hero_settings)));
+            update_post_meta($post_id, 'module_hero_settings', wp_json_encode($hero_settings, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'selling_points':
@@ -1706,7 +1706,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_selling_points', wp_slash(json_encode($selling_points)));
+            update_post_meta($post_id, 'module_selling_points', wp_json_encode($selling_points, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'stats':
@@ -1722,7 +1722,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_stats', wp_slash(json_encode($stats)));
+            update_post_meta($post_id, 'module_stats', wp_json_encode($stats, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'testimonials':
@@ -1739,7 +1739,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_testimonials', wp_slash(json_encode($testimonials)));
+            update_post_meta($post_id, 'module_testimonials', wp_json_encode($testimonials, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'gallery':
@@ -1748,7 +1748,7 @@ function save_module_meta($post_id) {
                 $gallery_ids = explode(',', sanitize_text_field($_POST['gallery_ids']));
                 $gallery_ids = array_map('intval', $gallery_ids);
             }
-            update_post_meta($post_id, 'module_gallery_ids', wp_slash(json_encode($gallery_ids)));
+            update_post_meta($post_id, 'module_gallery_ids', wp_json_encode($gallery_ids, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'faq':
@@ -1763,7 +1763,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_faq_items', wp_slash(json_encode($faq_items)));
+            update_post_meta($post_id, 'module_faq_items', wp_json_encode($faq_items, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'tabbed_content':
@@ -1778,7 +1778,7 @@ function save_module_meta($post_id) {
                     }
                 }
             }
-            update_post_meta($post_id, 'module_tabbed_content', wp_slash(json_encode($tabs)));
+            update_post_meta($post_id, 'module_tabbed_content', wp_json_encode($tabs, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'charts':
@@ -1805,7 +1805,7 @@ function save_module_meta($post_id) {
                 'datasets' => $datasets
             ];
 
-            update_post_meta($post_id, 'module_chart_data', wp_slash(json_encode($chart_data)));
+            update_post_meta($post_id, 'module_chart_data', wp_json_encode($chart_data, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'sharing':
@@ -1817,7 +1817,7 @@ function save_module_meta($post_id) {
                 'email' => isset($_POST['sharing_network_email']),
                 'whatsapp' => isset($_POST['sharing_network_whatsapp'])
             ];
-            update_post_meta($post_id, 'module_sharing_networks', wp_slash(json_encode($networks)));
+            update_post_meta($post_id, 'module_sharing_networks', wp_json_encode($networks, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'login':
@@ -1826,7 +1826,7 @@ function save_module_meta($post_id) {
                 'show_register' => isset($_POST['login_show_register']),
                 'show_lost_password' => isset($_POST['login_show_lost_password'])
             ];
-            update_post_meta($post_id, 'module_login_settings', wp_slash(json_encode($login_settings)));
+            update_post_meta($post_id, 'module_login_settings', wp_json_encode($login_settings, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'payment':
@@ -1838,7 +1838,7 @@ function save_module_meta($post_id) {
                 'success_url' => esc_url_raw($_POST['payment_success_url']),
                 'cancel_url' => esc_url_raw($_POST['payment_cancel_url'])
             ];
-            update_post_meta($post_id, 'module_payment_settings', wp_slash(json_encode($payment_settings)));
+            update_post_meta($post_id, 'module_payment_settings', wp_json_encode($payment_settings, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'calendar':
@@ -1857,7 +1857,7 @@ function save_module_meta($post_id) {
                 'disabled_dates' => $disabled_dates,
                 'available_times' => $available_times
             ];
-            update_post_meta($post_id, 'module_calendar_settings', wp_slash(json_encode($calendar_settings)));
+            update_post_meta($post_id, 'module_calendar_settings', wp_json_encode($calendar_settings, JSON_UNESCAPED_UNICODE));
             break;
 
         case 'video':

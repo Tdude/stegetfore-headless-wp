@@ -409,31 +409,9 @@ function save_page_modules($post_id) {
             $modules[] = $module_data;
         }
 
-        // Use direct database update to avoid encoding issues
-        global $wpdb;
-        $json_data = wp_json_encode($modules, JSON_UNESCAPED_UNICODE);
+        // Simplification of stuff
+        update_post_meta($post_id, 'page_modules', wp_json_encode($modules, JSON_UNESCAPED_UNICODE));
 
-        $meta_exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'page_modules'",
-            $post_id
-        ));
-
-        if ($meta_exists) {
-            $wpdb->update(
-                $wpdb->postmeta,
-                ['meta_value' => $json_data],
-                ['post_id' => $post_id, 'meta_key' => 'page_modules']
-            );
-        } else {
-            $wpdb->insert(
-                $wpdb->postmeta,
-                [
-                    'post_id' => $post_id,
-                    'meta_key' => 'page_modules',
-                    'meta_value' => $json_data
-                ]
-            );
-        }
     } else {
         // No modules selected, clear the meta
         delete_post_meta($post_id, 'page_modules');
