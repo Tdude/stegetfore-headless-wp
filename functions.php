@@ -113,7 +113,8 @@ $required_files = [
     //'/inc/features/cta.php',
     //'/inc/features/cta-api.php',
     '/inc/features/posts-api.php',
-    '/inc/admin/theme-options.php'
+    '/inc/admin/theme-options.php',
+    '/inc/admin/meta-cleanup.php'
 ];
 
 /**
@@ -340,3 +341,41 @@ add_action('rest_api_init', function () {
         return $served;
     }, 10, 2);
 });
+
+
+/**
+ * Prevent future slash buildup in meta fields
+ */
+function prevent_slash_buildup()
+{
+    // Remove the existing filter that adds slashes to JSON in post meta
+    remove_filter('update_post_metadata', 'wp_slash');
+
+    // Add our own filter that properly handles JSON
+    add_filter('update_post_metadata', function ($check, $object_id, $meta_key, $meta_value) {
+        // Only apply special handling to specific meta keys that store JSON
+        $json_meta_keys = [
+            'module_buttons',
+            'module_selling_points',
+            'module_stats',
+            'module_testimonials',
+            'module_faq_items',
+            'module_tabbed_content',
+            'selling_points',
+            'page_modules'
+        ];
+
+        // For these JSON fields, use our special handling
+        if (
+            in_array($meta_key, $json_meta_keys) && is_string($meta_value) &&
+            (strpos($meta_value, '[') === 0 || strpos($meta_value, '{') === 0)
+        ) {
+            // It's already JSON, so don't add more slashes
+            return $check;
+        }
+
+        // For all other fields, let WordPress handle it normally
+        return $check;
+    }, 10, 4);
+}
+add_action('init', 'prevent_slash_buildup');
