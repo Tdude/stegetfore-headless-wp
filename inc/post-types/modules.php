@@ -172,6 +172,8 @@ function get_button_styles()
         'primary' => __('Primary', 'steget'),
         'secondary' => __('Secondary', 'steget'),
         'default' => __('Default', 'steget'),
+        'destructive' => __('Destructive', 'steget'),
+        'outline' => __('Outline', 'steget'),
         'ghost' => __('Ghost', 'steget'),
         'link' => __('Link', 'steget')
     ];
