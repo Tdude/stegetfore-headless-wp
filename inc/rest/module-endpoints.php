@@ -194,8 +194,6 @@ function prepare_module_for_response($post)
         case 'hero':
             $hero_settings = json_decode(get_post_meta($post->ID, 'module_hero_settings', true), true) ?: [];
             $data = array_merge($data, [
-                'intro' => $post->post_excerpt,
-                'image' => $featured_image,
                 'overlayOpacity' => $hero_settings['overlay_opacity'] ?? 0.3,
                 'textColor' => $hero_settings['text_color'] ?? '',
                 'height' => $hero_settings['height'] ?? 'large',
