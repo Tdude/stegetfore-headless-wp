@@ -172,6 +172,7 @@ function get_button_styles()
         'primary' => __('Primary', 'steget'),
         'secondary' => __('Secondary', 'steget'),
         'default' => __('Default', 'steget'),
+        'success' => __('Sucess', 'steget'),
         'destructive' => __('Destructive', 'steget'),
         'outline' => __('Outline', 'steget'),
         'ghost' => __('Ghost', 'steget'),
@@ -185,8 +186,9 @@ function get_button_styles()
 function get_layout_options()
 {
     return [
-        'left' => __('Left Aligned', 'steget'),
-        'center' => __('Centered', 'steget'),
-        'right' => __('Right Aligned', 'steget')
+        'left' => __('Left aligned', 'steget'),
+        'center' => __('Centered - img bottom', 'steget'),
+        'center-top' => __('Centered - img top', 'steget'),
+        'right' => __('Right aligned', 'steget')
     ];
 }
