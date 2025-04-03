@@ -38,7 +38,7 @@ function render_page_modules_meta_box($post) {
     <?php foreach ($page_modules as $index => $module) : ?>
     <?php $module_post = get_post($module['id']); ?>
     <?php if ($module_post && $module_post->post_status === 'publish') : ?>
-    <div class="module-item" data-id="<?php echo $module['id']; ?>">
+    <div class="module-item" data-id="<?php echo esc_attr($module['id']); ?>">
         <div class="module-header">
             <span class="module-drag dashicons dashicons-move"></span>
             <strong><?php echo esc_html($module_post->post_title); ?></strong>
@@ -60,7 +60,7 @@ function render_page_modules_meta_box($post) {
         <div class="module-settings">
             <input type="hidden" name="module_id[]" value="<?php echo $module['id']; ?>">
             <label>
-                <input type="checkbox" name="module_override_settings[<?php echo $index; ?>]"
+                <input type="checkbox" name="module_override_settings[<?php echo $index; ?>]" value="1"
                     <?php checked(isset($module['override_settings']) && $module['override_settings']); ?>>
                 <?php _e('Override module settings', 'steget'); ?>
             </label>
@@ -113,149 +113,8 @@ function render_page_modules_meta_box($post) {
         <?php endforeach; ?>
     </select>
     <button type="button" class="button button-primary" id="add_module"><?php _e('Add Module', 'steget'); ?></button>
+    <?php wp_nonce_field('get_module_info', 'nonce'); ?>
 </div>
-
-<script type="text/javascript">
-jQuery(document).ready(function($) {
-    // Initialize sortable for modules
-    $('#page_modules_container').sortable({
-        handle: '.module-drag',
-        placeholder: 'module-placeholder',
-        forcePlaceholderSize: true
-    });
-
-    // Add new module
-    $('#add_module').on('click', function() {
-        var moduleId = $('#module_selector').val();
-
-        if (!moduleId) {
-            return;
-        }
-
-        var moduleTitle = $('#module_selector option:selected').text();
-        var index = $('.module-item').length;
-
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'get_module_info',
-                module_id: moduleId,
-                nonce: '<?php echo wp_create_nonce('get_module_info'); ?>'
-            },
-            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    var moduleData = response.data;
-                    // Fix double encoding of special characters
-                    var decodedTitle = $('<div/>').html(moduleData.title).text();
-                    var decodedTemplateName = $('<div/>').html(moduleData.template_name)
-                        .text();
-
-                    var template = `
-                            <div class="module-item" data-id="${moduleData.id}">
-                                <div class="module-header">
-                                    <span class="module-drag dashicons dashicons-move"></span>
-                                    <strong>${moduleData.title}</strong>
-                                    <span class="module-type">(${moduleData.template_name})</span>
-                                    <div class="module-actions">
-                                        <a href="${moduleData.edit_url}" class="module-edit" target="_blank" title="<?php _e('Edit', 'steget'); ?>">
-                                            <span class="dashicons dashicons-edit"></span>
-                                        </a>
-                                        <a href="#" class="module-remove" title="<?php _e('Remove', 'steget'); ?>">
-                                            <span class="dashicons dashicons-no-alt"></span>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="module-settings">
-                                    <input type="hidden" name="module_id[]" value="${moduleData.id}">
-                                    <label>
-                                        <input type="checkbox" name="module_override_settings[${index}]">
-                                        <?php _e('Override module settings', 'steget'); ?>
-                                    </label>
-
-                                    <div class="module-override-options hidden">
-                                        <p>
-                                            <label><?php _e('Layout:', 'steget'); ?></label>
-                                            <select name="module_layout[${index}]">
-                                                <?php foreach (get_layout_options() as $value => $label) : ?>
-                                                    <option value="<?php echo esc_attr($value); ?>" <?php selected('center', $value); ?>>
-                                                        <?php echo esc_html($label); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </p>
-
-                                        <p>
-                                            <label>
-                                                <input type="checkbox" name="module_full_width[${index}]">
-                                                <?php _e('Full Width', 'steget'); ?>
-                                            </label>
-                                        </p>
-
-                                        <p>
-                                            <label><?php _e('Background Color:', 'steget'); ?></label>
-                                            <input type="text" name="module_background_color[${index}]" value="" class="color-picker">
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-
-                    $('#page_modules_container').append(template);
-
-                    // Initialize color picker for the new module
-                    $('.color-picker').wpColorPicker();
-
-                    // Reset the selector
-                    $('#module_selector').val('');
-                }
-            }
-        });
-    });
-
-    // Remove module
-    $(document).on('click', '.module-remove', function(e) {
-        e.preventDefault();
-        $(this).closest('.module-item').remove();
-
-        // Update indices
-        updateModuleIndices();
-    });
-
-    // Toggle override settings
-    $(document).on('change', 'input[name^="module_override_settings"]', function() {
-        $(this).closest('.module-settings').find('.module-override-options').toggleClass('hidden', !this
-            .checked);
-    });
-
-    // Initialize color picker
-    $('.color-picker').wpColorPicker();
-
-    // Update module indices when sorting changes
-    function updateModuleIndices() {
-        $('.module-item').each(function(index) {
-            $(this).find('input[name^="module_override_settings"]').attr('name',
-                'module_override_settings[' + index + ']');
-            $(this).find('select[name^="module_layout"]').attr('name', 'module_layout[' + index + ']');
-            $(this).find('input[name^="module_full_width"]').attr('name', 'module_full_width[' + index +
-                ']');
-            $(this).find('input[name^="module_background_color"]').attr('name',
-                'module_background_color[' + index + ']');
-
-            // Add order field
-            $(this).find('input[name^="module_order"]').remove(); // Remove any existing
-            $(this).append('<input type="hidden" name="module_order[' + index + ']" value="' + index +
-                '">');
-        });
-    }
-
-    $('#page_modules_container').on('sortupdate', function() {
-        updateModuleIndices();
-    });
-});
-</script>
 
 <style type="text/css">
 .module-item {
@@ -359,6 +218,7 @@ function get_module_info_ajax() {
         'edit_url' => get_edit_post_link($module->ID, '')
     ]);
 }
+add_action('wp_ajax_get_module_info', 'get_module_info_ajax');
 
 /**
  * Save page modules association
@@ -409,7 +269,6 @@ function save_page_modules($post_id) {
             $modules[] = $module_data;
         }
 
-        // Simplification of stuff
         update_post_meta($post_id, 'page_modules', wp_json_encode($modules, JSON_UNESCAPED_UNICODE));
 
     } else {
@@ -437,5 +296,54 @@ function enqueue_page_modules_scripts($hook) {
     wp_enqueue_style('wp-color-picker');
     wp_enqueue_script('wp-color-picker');
     wp_enqueue_script('jquery-ui-sortable');
+    
+    // Enqueue the admin script that contains module page integration functionality
+    wp_enqueue_script(
+        'steget-admin',
+        get_template_directory_uri() . '/inc/js/admin.js',
+        ['jquery', 'jquery-ui-sortable', 'wp-color-picker'],
+        '1.0.0',
+        true
+    );
+    
+    // Add some basic styles for the module interface
+    wp_add_inline_style('wp-admin', '
+        .module-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .module-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .module-drag {
+            cursor: move;
+            margin-right: 10px;
+        }
+        .module-type {
+            color: #777;
+            margin-left: 5px;
+        }
+        .module-actions {
+            margin-left: auto;
+        }
+        .module-edit, .module-remove {
+            margin-left: 5px;
+            text-decoration: none;
+        }
+        .module-placeholder {
+            border: 1px dashed #bbb;
+            background: #f7f7f7;
+            height: 40px;
+            margin-bottom: 10px;
+        }
+        .module-selector {
+            margin-top: 15px;
+        }
+    ');
 }
 add_action('admin_enqueue_scripts', 'enqueue_page_modules_scripts');

@@ -103,16 +103,6 @@ $required_files = [
     '/inc/meta-fields/register-meta.php',
     '/inc/rest/endpoints.php',
     '/inc/rest/wpcf7-endpoints.php',
-    '/inc/rest/module-endpoints.php',
-
-    // Feature files
-    //'/inc/features/hero.php',
-    //'/inc/features/hero-api.php',
-    //'/inc/features/selling-points.php',
-    //'/inc/features/selling-points-api.php',
-    //'/inc/features/cta.php',
-    //'/inc/features/cta-api.php',
-    '/inc/features/posts-api.php',
     '/inc/admin/theme-options.php',
     '/inc/admin/meta-cleanup.php'
 ];
@@ -125,13 +115,11 @@ foreach ($required_files as $file) {
     $file_path = get_template_directory() . $file;
     if (file_exists($file_path)) {
         require_once $file_path;
-        // error_log("Loaded file: $file");
+        error_log("Loaded file: $file");
     } else {
         error_log("Could not find file: $file");
     }
 }
-
-
 
 // Caching. This could live in its own plugin
 function trigger_nextjs_revalidation($post_id)

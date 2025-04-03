@@ -35,4 +35,104 @@ jQuery(document).ready(function ($) {
 
   // Initialize any media uploaders if needed
   // Note: Each feature file that uses media uploader has its own JS
+
+  // MODULE PAGE INTEGRATION FUNCTIONALITY
+  // Initialize sortable for modules
+  if ($('#page_modules_container').length) {
+    $('#page_modules_container').sortable({
+      handle: '.module-drag',
+      placeholder: 'module-placeholder',
+      forcePlaceholderSize: true
+    });
+
+    // Add new module
+    $('#add_module').on('click', function() {
+      var moduleId = $('#module_selector').val();
+
+      if (!moduleId) {
+        return;
+      }
+
+      var moduleTitle = $('#module_selector option:selected').text();
+      var index = $('.module-item').length;
+
+      $.ajax({
+        url: ajaxurl,
+        type: 'POST',
+        data: {
+          action: 'get_module_info',
+          module_id: moduleId,
+          nonce: $('#nonce').val()
+        },
+        dataType: 'json',
+        success: function(response) {
+          if (response.success) {
+            var moduleData = response.data;
+            var moduleHtml = '<div class="module-item" data-id="' + moduleId + '">' +
+              '<div class="module-header">' +
+              '<span class="module-drag dashicons dashicons-move"></span>' +
+              '<strong>' + moduleData.title + '</strong>' +
+              '<span class="module-type">(' + moduleData.template_name + ')</span>' +
+              '<div class="module-actions">' +
+              '<a href="' + moduleData.edit_url + '" class="module-edit" target="_blank">' +
+              '<span class="dashicons dashicons-edit"></span>' +
+              '</a>' +
+              '<a href="#" class="module-remove">' +
+              '<span class="dashicons dashicons-trash"></span>' +
+              '</a>' +
+              '</div>' +
+              '</div>' +
+              '<div class="module-settings">' +
+              '<input type="hidden" name="module_id[]" value="' + moduleId + '">' +
+              '<label>' +
+              '<input type="checkbox" name="module_override_settings[' + index + ']" value="1"> ' +
+              'Override module settings' +
+              '</label>' +
+              '<div class="module-override-options hidden">' +
+              '<p>' +
+              '<label>Layout:</label>' +
+              '<select name="module_layout[' + index + ']">' +
+              '<option value="center">Center</option>' +
+              '<option value="left">Left</option>' +
+              '<option value="right">Right</option>' +
+              '</select>' +
+              '</p>' +
+              '<p>' +
+              '<label>' +
+              '<input type="checkbox" name="module_full_width[' + index + ']" value="1"> ' +
+              'Full Width' +
+              '</label>' +
+              '</p>' +
+              '<p>' +
+              '<label>Background Color: ' +
+              '<input type="text" name="module_background_color[' + index + ']" class="module-color-picker" value="">' +
+              '</label>' +
+              '</p>' +
+              '</div>' +
+              '</div>' +
+              '</div>';
+
+            $('#page_modules_container').append(moduleHtml);
+            $('.module-color-picker').wpColorPicker();
+          }
+        }
+      });
+    });
+
+    // Remove module
+    $(document).on('click', '.module-remove', function(e) {
+      e.preventDefault();
+      if (confirm('Are you sure you want to remove this module?')) {
+        $(this).closest('.module-item').remove();
+      }
+    });
+
+    // Toggle override settings
+    $(document).on('change', 'input[name^="module_override_settings"]', function() {
+      $(this).closest('.module-settings').find('.module-override-options').toggleClass('hidden', !this.checked);
+    });
+
+    // Initialize color pickers
+    $('.module-color-picker').wpColorPicker();
+  }
 });

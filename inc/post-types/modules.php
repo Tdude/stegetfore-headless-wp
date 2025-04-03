@@ -19,7 +19,13 @@ $module_components = [
 ];
 
 foreach ($module_components as $component) {
-    require_once get_template_directory() . '/inc' . $component;
+    $component_path = get_template_directory() . '/inc' . $component;
+    if (file_exists($component_path)) {
+        require_once $component_path;
+        error_log("Loaded module component: $component");
+    } else {
+        error_log("MISSING module component: $component");
+    }
 }
 
 

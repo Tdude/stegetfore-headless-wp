@@ -528,11 +528,90 @@ const PageBuilder = ({ pageId }) => {
 export default PageBuilder;
 ```
 
-## Conclusion
+## Evaluation System API
 
-### I know WP has blocks but sometimes we do better without them.
+The evaluation system provides endpoints for managing student evaluations and retrieving evaluation questions.
 
-By leveraging the module REST API endpoints and following the implementation examples provided, you can create a robust and maintainable frontend that connects seamlessly with your WordPress backend.
+### Authentication Requirements
+
+The evaluation system uses the Headless Access Manager (HAM) plugin for JWT authentication. Most endpoints require authentication, but the evaluation questions structure is available through a public endpoint.
+
+### Evaluation Endpoints
+
+| Endpoint | Method | Auth Required | Description |
+|----------|--------|---------------|-------------|
+| `/wp-json/ham/v1/evaluation/save` | POST | Yes | Save or update an evaluation |
+| `/wp-json/ham/v1/evaluation/get/{id}` | GET | Yes | Get a specific evaluation by ID |
+| `/wp-json/ham/v1/evaluation/questions` | GET | Yes | Get evaluation questions structure (requires JWT auth) |
+| `/wp-json/public/v1/evaluation/questions` | GET | No | Public endpoint for evaluation questions structure |
+
+### Using the Public Evaluation Questions Endpoint
+
+The public endpoint for evaluation questions was created to allow access without JWT authentication. This is particularly useful for initial form loading before a user is authenticated.
+
+Example of fetching evaluation questions using the public endpoint:
+
+```javascript
+// Using fetch directly
+async function getEvaluationQuestions() {
+  const response = await fetch('/wp-json/public/v1/evaluation/questions');
+  const data = await response.json();
+  return data;
+}
+
+// Using the API client from formTryggveApi.ts
+import { evaluationApi } from '@/lib/api/formTryggveApi';
+
+async function loadEvaluationQuestions() {
+  try {
+    const questionsData = await evaluationApi.getQuestionsStructure();
+    // Process the questions data
+    return questionsData;
+  } catch (error) {
+    console.error('Error loading evaluation questions:', error);
+  }
+}
+```
+
+### Evaluation Questions Structure
+
+The evaluation questions endpoint returns a structured object with sections and questions:
+
+```json
+{
+  "anknytning": {
+    "title": "Anknytning",
+    "questions": {
+      "a1": {
+        "text": "Eleven söker kontakt med läraren vid behov",
+        "options": [
+          {"value": "1", "label": "1", "stage": "ej"},
+          {"value": "2", "label": "2", "stage": "ej"},
+          {"value": "3", "label": "3", "stage": "trans"},
+          {"value": "4", "label": "4", "stage": "trans"},
+          {"value": "5", "label": "5", "stage": "full"}
+        ]
+      },
+      "a2": {
+        "text": "Eleven tar emot tröst från läraren",
+        "options": [
+          {"value": "1", "label": "1", "stage": "ej"},
+          {"value": "2", "label": "2", "stage": "ej"},
+          {"value": "3", "label": "3", "stage": "trans"},
+          {"value": "4", "label": "4", "stage": "trans"},
+          {"value": "5", "label": "5", "stage": "full"}
+        ]
+      }
+    }
+  },
+  "ansvar": {
+    "title": "Ansvar",
+    "questions": {
+      // More questions here...
+    }
+  }
+}
+```
 
 ## API Endpoints Reference
 
@@ -815,104 +894,7 @@ const formData = new URLSearchParams();
 formData.append("your-name", "John Doe");
 formData.append("your-email", "john@example.com");
 formData.append("your-subject", "Hello");
-formData.append("your-message", "This is a test message");
-
-// Submit the form
-fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-  },
-  body: formData.toString(),
-})
-  .then((response) => response.json())
-  .then((result) => {
-    console.log("Submission result:", result);
-    // result = { status: "mail_sent", message: "Thank you for your message..." }
-  })
-  .catch((error) => {
-    console.error("Error:", error);
-  });
-```
-
-## Important Notes About Submission
-
-1. **Content-Type**: Always use `application/x-www-form-urlencoded` for the content type. This is what CF7 expects.
-
-2. **Field Names**: Use the exact field names defined in your CF7 form. These typically follow the pattern `your-name`, `your-email`, etc.
-
-3. **Response Format**: The submission endpoint returns a JSON object with:
-   - `status`: Either "mail_sent" (success) or "mail_failed" (error)
-   - `message`: The success/error message configured in the CF7 form settings
-   - `errors`: (If validation fails) Details about which fields failed validation
-
-## React Integration
-
-Here's how to create a React component that integrates with the CF7 API:
-
-````jsx
-
-# WPCF7 Integration for a Headless theme
-
-How to integrate Contact Form 7 with a headless WordPress setup.
-
-## Overview
-
-CF7 is a WordPress plugin for creating forms, but it doesn't natively support headless implementations. The custom endpoints and components in this theme bridge the gap, allowing you to use CF7 forms in a decoupled frontend. Because why not reinventing the wheel?
-
-## API Endpoints
-
-This headless theme provides the following custom endpoints for Contact Form 7:
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/wp-json/steget/v1/cf7/forms` | GET | List all available Contact Form 7 forms |
-| `/wp-json/steget/v1/cf7/form/{id}` | GET | Get form structure and fields for a specific form |
-| `/wp-json/steget/v1/cf7/submit/{id}` | POST | Submit a form |
-
-## How to Use the API
-
-### 1. List Available Forms
-
-First, fetch all available forms to get their IDs:
-
-```javascript
-fetch('/wp-json/steget/v1/cf7/forms')
-  .then(response => response.json())
-  .then(forms => {
-    console.log('Available forms:', forms);
-    // forms = [{ id: 123, title: "Contact Form", shortcode: "[contact-form-7 id=\"123\" title=\"Contact Form\"]" }, ...]
-  });
-````
-
-### 2. Get Form Structure
-
-To build a dynamic form, fetch its structure:
-
-```javascript
-const formId = 146; // Replace with your form ID
-
-fetch(`/wp-json/steget/v1/cf7/form/${formId}`)
-  .then((response) => response.json())
-  .then((formData) => {
-    console.log("Form structure:", formData);
-    // formData includes title, fields, and messages
-  });
-```
-
-### 3. Submit Form Data
-
-To submit the form, send a POST request with the form data:
-
-```javascript
-const formId = 146; // Replace with your form ID
-const formData = new URLSearchParams();
-
-// Add form fields
-formData.append("your-name", "John Doe");
-formData.append("your-email", "john@example.com");
-formData.append("your-subject", "Hello");
-formData.append("your-message", "This is a test message");
+formData.append("your-message", "This is a test message.");
 
 // Submit the form
 fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
@@ -1104,4 +1086,3 @@ const ContactForm = ({ formId, apiUrl = "/wp-json" }) => {
 };
 
 export default ContactForm;
-```

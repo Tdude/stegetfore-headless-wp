@@ -54,7 +54,7 @@ function register_custom_templates($templates) {
         'templates/full-width.php' => 'Full Width Layout',
         'templates/sidebar.php'    => 'Sidebar Layout',
         'templates/landing.php'    => 'Startsida m blogg (Landing Page)',
-        'templates/evaluation.php' => 'Obsverktyget (Evaluation)',
+        'templates/evaluation.php' => '',
         'templates/circle-chart.php' => 'Cirkeldiagram (Circle Chart)',
         'templates/contact.php' => 'Kontaktformulär (WPCF7)',
         'templates/homepage.php' => 'Startsidan (Specialinlägg)'
