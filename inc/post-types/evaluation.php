@@ -103,99 +103,83 @@ function get_evaluation($request) {
  * @return array The evaluation questions structure
  */
 function get_evaluation_questions() {
-    // Default structure in case no HAM assessment data is found
     $questions_structure = [];
     
-    // Try to get HAM assessments using a direct database query to avoid conflicts
-    global $wpdb;
-    $assessment_id = null;
+    // Use WP_Query instead of direct database query
+    $assessment_query = new WP_Query([
+        'post_type' => 'ham_assessment',
+        'posts_per_page' => 1,
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'post_status' => 'publish',
+        'no_found_rows' => true, // Performance optimization
+        'update_post_meta_cache' => true, // Ensure meta is fresh
+        'update_post_term_cache' => false // We don't need terms
+    ]);
     
-    // First try to get the latest assessment
-    $assessment_query = $wpdb->prepare(
-        "SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status = %s ORDER BY post_date DESC LIMIT 1",
-        'ham_assessment',
-        'publish'
-    );
-    $assessment_id = $wpdb->get_var($assessment_query);
-    
-    // If no assessment found, try specific ID from logs
-    if (!$assessment_id) {
-        $assessment_id = 564; // ID from logs
-    }
-    
-    if ($assessment_id) {
-        // Get assessment data from HAM using direct meta query
-        $ham_data = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s",
-            $assessment_id,
-            '_ham_assessment_data'
-        ));
+    if ($assessment_query->have_posts()) {
+        $assessment = $assessment_query->posts[0];
+        $ham_data = get_post_meta($assessment->ID, '_ham_assessment_data', true);
         
-        if ($ham_data) {
-            $ham_data = maybe_unserialize($ham_data);
+        if (!empty($ham_data) && is_array($ham_data)) {
+            error_log('Retrieved assessment data for ID ' . $assessment->ID . ': ' . json_encode(array_keys($ham_data)));
             
-            if (is_array($ham_data)) {
-                error_log('Retrieved assessment data for ID ' . $assessment_id . ': ' . json_encode(array_keys($ham_data)));
+            // Transform HAM data to our expected format
+            foreach ($ham_data as $section_id => $section) {
+                if (!isset($section['questions']) || !is_array($section['questions'])) {
+                    continue;
+                }
                 
-                // Transform HAM data to our expected format
-                foreach ($ham_data as $section_id => $section) {
-                    if (!isset($section['questions']) || !is_array($section['questions'])) {
+                $questions_structure[$section_id] = [
+                    'title' => isset($section['title']) ? $section['title'] : ucfirst($section_id),
+                    'questions' => [],
+                ];
+                
+                foreach ($section['questions'] as $question_id => $question) {
+                    if (!isset($question['text'])) {
                         continue;
                     }
                     
-                    $questions_structure[$section_id] = [
-                        'title' => isset($section['title']) ? $section['title'] : ucfirst($section_id),
-                        'questions' => [],
+                    // Default options if not provided
+                    $formatted_options = [
+                        ['value' => '1', 'label' => '1', 'stage' => 'ej'],
+                        ['value' => '2', 'label' => '2', 'stage' => 'ej'],
+                        ['value' => '3', 'label' => '3', 'stage' => 'trans'],
+                        ['value' => '4', 'label' => '4', 'stage' => 'trans'],
+                        ['value' => '5', 'label' => '5', 'stage' => 'full']
                     ];
                     
-                    foreach ($section['questions'] as $question_id => $question) {
-                        if (!isset($question['text'])) {
-                            continue;
-                        }
-                        
-                        // Default options if not provided
-                        $formatted_options = [
-                            ['value' => '1', 'label' => '1', 'stage' => 'ej'],
-                            ['value' => '2', 'label' => '2', 'stage' => 'ej'],
-                            ['value' => '3', 'label' => '3', 'stage' => 'trans'],
-                            ['value' => '4', 'label' => '4', 'stage' => 'trans'],
-                            ['value' => '5', 'label' => '5', 'stage' => 'full']
-                        ];
-                        
-                        // Use provided options if available
-                        if (isset($question['options']) && is_array($question['options'])) {
-                            $formatted_options = [];
-                            foreach ($question['options'] as $option) {
-                                // Ensure the option has the required fields
-                                if (isset($option['value']) && isset($option['label'])) {
-                                    $formatted_options[] = [
-                                        'value' => $option['value'],
-                                        'label' => $option['label'],
-                                        'stage' => isset($option['stage']) ? $option['stage'] : 'trans',
-                                    ];
-                                }
+                    // Use provided options if available
+                    if (isset($question['options']) && is_array($question['options'])) {
+                        $formatted_options = [];
+                        foreach ($question['options'] as $option) {
+                            // Ensure the option has the required fields
+                            if (isset($option['value']) && isset($option['label'])) {
+                                $formatted_options[] = [
+                                    'value' => $option['value'],
+                                    'label' => $option['label'],
+                                    'stage' => isset($option['stage']) ? $option['stage'] : 'trans',
+                                ];
                             }
                         }
-                        
-                        $questions_structure[$section_id]['questions'][$question_id] = [
-                            'text' => $question['text'],
-                            'options' => $formatted_options,
-                        ];
                     }
+                    
+                    $questions_structure[$section_id]['questions'][$question_id] = [
+                        'text' => $question['text'],
+                        'options' => $formatted_options,
+                    ];
                 }
             }
         }
     }
     
-    // If no valid sections were found, use fallback
+    // If no valid data found, use fallback
     if (empty($questions_structure)) {
         error_log('No valid HAM assessment data found, using fallback structure');
-        return get_fallback_questions_structure();
+        $questions_structure = get_fallback_questions_structure();
     }
     
-    // For debugging
     error_log('Returning evaluation questions structure from HAM assessment: ' . json_encode(array_keys($questions_structure)));
-    
     return $questions_structure;
 }
 
