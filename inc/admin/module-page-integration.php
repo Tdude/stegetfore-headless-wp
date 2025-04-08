@@ -22,13 +22,14 @@ function render_page_modules_meta_box($post) {
 
     $page_modules = json_decode(get_post_meta($post->ID, 'page_modules', true), true) ?: [];
 
-    // Get all available modules
+    // Get all available modules without any filtering
     $modules = get_posts([
         'post_type' => 'module',
         'posts_per_page' => -1,
         'post_status' => 'publish',
-        'orderby' => 'title',
-        'order' => 'ASC'
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+        'suppress_filters' => true // Prevent any filtering
     ]);
     ?>
 <p><?php _e('Add and arrange modules for this page:', 'steget'); ?></p>
@@ -245,8 +246,7 @@ function save_page_modules($post_id) {
 
         foreach ($_POST['module_id'] as $index => $module_id) {
             $module_data = [
-                'id' => intval($module_id),
-                'order' => $index
+                'id' => intval($module_id)
             ];
 
             // Check if overriding settings
