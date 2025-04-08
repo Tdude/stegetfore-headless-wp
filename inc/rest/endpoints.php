@@ -134,6 +134,92 @@ add_action('rest_api_init', function () {
         },
         'permission_callback' => '__return_true'
     ]);
+
+    // Public endpoint for evaluation questions
+    register_rest_route('public/v1', '/evaluation/questions', [
+        'methods' => 'GET',
+        'callback' => function() {
+            // Get the latest assessment that has question data
+            $assessments = get_posts(array(
+                'post_type'      => 'ham_assessment',
+                'posts_per_page' => 1,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                'meta_query'     => array(
+                    array(
+                        'key'     => 'ham_assessment_data',
+                        'compare' => 'EXISTS',
+                    ),
+                ),
+            ));
+
+            if (empty($assessments)) {
+                return new WP_Error('no_data', 'No assessment data found', ['status' => 404]);
+            }
+
+            $assessment_data = get_post_meta($assessments[0]->ID, 'ham_assessment_data', true);
+
+            if (empty($assessment_data)) {
+                return new WP_Error('no_data', 'No assessment data found', ['status' => 404]);
+            }
+
+            return $assessment_data;
+        },
+        'permission_callback' => '__return_true'
+    ]);
+
+    // Assessment data endpoint
+    register_rest_route('ham/v1', '/assessment/(?P<id>\d+)', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            $post_id = $request['id'];
+            
+            // Try both meta keys
+            $assessment_data = get_post_meta($post_id, 'ham_assessment_data', true);
+            if (empty($assessment_data)) {
+                $assessment_data = get_post_meta($post_id, '_ham_assessment_data', true);
+            }
+
+            // Debug info
+            $debug = [
+                'post_exists' => get_post($post_id) !== null,
+                'meta_keys' => array_filter(get_post_custom_keys($post_id) ?: []), // Filter out null/false values
+                'raw_meta' => array_filter(get_post_meta($post_id)), // Filter out empty values
+                'post_type' => get_post_type($post_id)
+            ];
+            
+            if (empty($assessment_data)) {
+                return new WP_Error('no_data', 'No assessment data found', [
+                    'status' => 404,
+                    'debug' => $debug
+                ]);
+            }
+
+            return [
+                'id' => $post_id,
+                'assessment_data' => $assessment_data,
+                'debug' => $debug
+            ];
+        },
+        'permission_callback' => '__return_true'
+    ]);
+
+    // Debug endpoint for page modules
+    register_rest_route('steget/v1', '/debug/page-modules/(?P<id>\d+)', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            $page_id = $request['id'];
+            $page_modules = get_post_meta($page_id, 'page_modules', true);
+            return [
+                'raw_meta' => $page_modules,
+                'decoded' => json_decode($page_modules, true),
+                'page_id' => $page_id
+            ];
+        },
+        'permission_callback' => function() {
+            return current_user_can('edit_posts');
+        }
+    ]);
 });
 
 // Add featured image to REST API
@@ -151,39 +237,6 @@ add_action('rest_api_init', function () {
         }
     ]);
 });
-
-
-// Startpage endpoints for fewer requests
-function register_homepage_data_endpoint()
-{
-    register_rest_route('startpage/v2', '/homepage-data', [
-        'methods' => 'GET',
-        'callback' => 'get_homepage_data_v2',
-        'permission_callback' => '__return_true',
-    ]);
-}
-add_action('rest_api_init', 'register_homepage_data_endpoint');
-
-
-function get_homepage_data_v2()
-{
-    $homepage_id = get_option('page_on_front');
-
-    // Include all feature API files if not already included
-    require_once get_template_directory() . '/inc/features/hero-api.php';
-    require_once get_template_directory() . '/inc/features/posts-api.php';
-    require_once get_template_directory() . '/inc/features/testimonials-api.php';
-    require_once get_template_directory() . '/inc/features/cta-api.php';
-
-    return [
-        'hero' => get_hero_data($homepage_id),
-        'featured_posts' => get_featured_posts_data(),
-        'featured_posts_title' => 'I fokus',
-        'cta' => get_cta_data($homepage_id),
-        'testimonials' => get_testimonials_data(),
-        'testimonials_title' => 'Vad våra klienter säger'
-    ];
-}
 
 // General UTF-8 encoding filter for REST API responses
 function steget_ensure_utf8_encoding_rest($response, $handler, $request)
