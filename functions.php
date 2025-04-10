@@ -1,39 +1,12 @@
 <?php
+
 /**
  * functions.php
  */
 
-if (!defined('ABSPATH'))
+if (!defined('ABSPATH')) {
     exit;
-
-/**
- * DIAGNOSTIC - CAREFUL: Temporarily test email on EVERY load
- * */
-/*
-function test_wp_mail() {
-    $to = 'your-email@example.com'; // Your email address
-    $subject = 'Test Email from WordPress';
-    $message = 'This is a test email from your WordPress site';
-    $headers = 'From: WordPress <wordpress@yoursite.com>' . "\r\n";
-
-    $result = wp_mail($to, $subject, $message, $headers);
-    error_log('Mail test result: ' . ($result ? 'Success' : 'Failed'));
 }
-add_action('init', 'test_wp_mail');
-*/
-
-// DIAGNOSTIC: See all endpoints TEST!
-/*
-function list_all_registered_routes() {
-    $routes = rest_get_server()->get_routes();
-    error_log('=== REGISTERED REST ROUTES ===');
-    foreach ($routes as $route => $route_details) {
-        error_log($route);
-    }
-    error_log('=== END ROUTES ===');
-}
-add_action('rest_api_init', 'list_all_registered_routes', 999);
-*/
 
 // Theme Setup
 function headless_theme_setup()
@@ -220,6 +193,26 @@ function enqueue_evaluation_scripts()
 }
 add_action('wp_enqueue_scripts', 'enqueue_evaluation_scripts');
 
+// Filter image URLs to always use production URLs
+function fix_image_urls($url) {
+    // Convert localhost URLs to production
+    if (strpos($url, 'localhost:8000') !== false) {
+        $url = str_replace('http://localhost:8000', 'https://stegetfore.nu', $url);
+    }
+    return $url;
+}
+
+add_filter('wp_get_attachment_url', 'fix_image_urls');
+add_filter('wp_calculate_image_srcset', function($sources) {
+    if (empty($sources)) {
+        return $sources;
+    }
+
+    foreach ($sources as &$source) {
+        $source['url'] = fix_image_urls($source['url']);
+    }
+    return $sources;
+});
 
 /**
  * Included Contact Form 7 custom endpoints to functions.php
@@ -330,7 +323,6 @@ add_action('rest_api_init', function () {
     }, 10, 2);
 });
 
-
 /**
  * Prevent future slash buildup in meta fields
  */
@@ -367,3 +359,21 @@ function prevent_slash_buildup()
     }, 10, 4);
 }
 add_action('init', 'prevent_slash_buildup');
+
+// Include the content display meta fields
+require_once get_template_directory() . '/inc/meta-fields/content-display-meta.php';
+
+// The safe_json_decode function has been moved to inc/meta-fields/register-meta.php
+
+/**
+ * Safe JSON parser - prevents errors when invalid JSON is encountered
+ * Use this instead of json_decode throughout the theme
+ */
+// Removed the safe_json_decode function from functions.php since it has been moved to inc/meta-fields/register-meta.php for better organization.
+
+/**
+ * Included Contact Form 7 custom endpoints to functions.php
+ */
+if (defined('WPCF7_VERSION')) {
+    require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
+}

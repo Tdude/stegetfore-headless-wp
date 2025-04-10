@@ -20,7 +20,8 @@ add_action('add_meta_boxes', 'add_page_modules_meta_box');
 function render_page_modules_meta_box($post) {
     wp_nonce_field('save_page_modules', 'page_modules_nonce');
 
-    $page_modules = json_decode(get_post_meta($post->ID, 'page_modules', true), true) ?: [];
+    // Use our safe JSON decoder to prevent errors
+    $page_modules = safe_json_decode(get_post_meta($post->ID, 'page_modules', true), true) ?: [];
 
     // Get all available modules without any filtering
     $modules = get_posts([

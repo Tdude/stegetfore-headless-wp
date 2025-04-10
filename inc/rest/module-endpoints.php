@@ -50,6 +50,41 @@ function register_modules_rest_routes()
             ]
         ]
     ]);
+
+    // Add debug route for page modules
+    register_rest_route('steget/v1', '/modules/debug/(?P<id>\d+)', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            $page_id = $request['id'];
+            $page_modules = get_post_meta($page_id, 'page_modules', true);
+            
+            // Get all modules for comparison
+            $all_modules = get_posts([
+                'post_type' => 'module',
+                'posts_per_page' => -1,
+                'orderby' => 'menu_order',
+                'order' => 'ASC'
+            ]);
+            
+            return [
+                'page_id' => $page_id,
+                'page_title' => get_the_title($page_id),
+                'stored_modules' => [
+                    'raw' => $page_modules,
+                    'decoded' => json_decode($page_modules, true)
+                ],
+                'all_available_modules' => array_map(function($post) {
+                    return [
+                        'id' => $post->ID,
+                        'title' => $post->post_title,
+                        'menu_order' => $post->menu_order,
+                        'status' => $post->post_status
+                    ];
+                }, $all_modules)
+            ];
+        },
+        'permission_callback' => '__return_true'  // Allow anyone to access for debugging
+    ]);
 }
 add_action('rest_api_init', 'register_modules_rest_routes');
 
@@ -62,7 +97,9 @@ function get_modules_endpoint($request)
         'post_type' => 'module',
         'posts_per_page' => $request['per_page'],
         'paged' => $request['page'],
-        'post_status' => 'publish'
+        'post_status' => 'publish',
+        'orderby' => 'menu_order',
+        'order' => 'ASC'
     ];
 
     // Template filter
@@ -184,9 +221,12 @@ function prepare_module_for_response($post)
         'categories' => wp_get_post_terms($post->ID, 'module_category', ['fields' => 'slugs']),
         'placements' => wp_get_post_terms($post->ID, 'module_placement', ['fields' => 'names']),
         'type' => $type,
-        // Use type priority as primary sort, existing order as secondary
-        'order' => $type_priority > 0 ? $type_priority : $existing_order,
+        // Use menu_order as the primary sort criterion
+        'order' => $post->menu_order,
+        // Keep typeOrder for backwards compatibility
         'typeOrder' => $type_priority,
+        // Initialize points as empty array by default for selling-points type
+        'points' => $type === 'selling-points' ? [] : null
     ];
 
     // Format module-specific data to match React component props
@@ -202,9 +242,29 @@ function prepare_module_for_response($post)
             break;
 
         case 'selling_points':
-            $points = json_decode(get_post_meta($post->ID, 'module_selling_points', true), true) ?: [];
-            $data['points'] = $points; // This matches what React expects
+            $points = json_decode(get_post_meta($post->ID, 'module_selling_points', true), true);
+            error_log('Raw selling points meta: ' . print_r(get_post_meta($post->ID, 'module_selling_points', true), true));
+            error_log('Decoded points: ' . print_r($points, true));
+            
+            // Make sure we have an array
+            $points = is_array($points) ? $points : [];
+            
+            // Transform points to match frontend structure
+            $data['points'] = array_map(function($point) {
+                error_log('Processing point: ' . print_r($point, true));
+                return [
+                    'id' => uniqid(), // Add an ID for React keys
+                    'title' => $point['title'] ?? '',
+                    'description' => $point['description'] ?? '',
+                    'icon' => $point['icon'] ?? '',
+                    'content' => $point['description'] ?? ''
+                ];
+            }, $points);
+            error_log('Final points data: ' . print_r($data['points'], true));
+            
             $data['columns'] = intval(get_post_meta($post->ID, 'module_columns', true) ?: 3);
+            // Ensure type is consistent with template name
+            $data['type'] = 'selling_points';
             break;
 
         case 'cta':
@@ -308,6 +368,130 @@ function prepare_module_for_response($post)
 }
 
 /**
+ * Register REST field for page modules
+ */
+function register_page_modules_rest_field()
+{
+    register_rest_field(
+        ['page', 'post'],
+        'modules',
+        [
+            'get_callback' => function ($post) {
+                $post_id = $post['id'];
+                $page_slug = get_post_field('post_name', $post_id);
+                $page_template = get_post_meta($post_id, '_wp_page_template', true);
+                
+                // Get the modules that are directly assigned to this page
+                $page_modules = get_post_meta($post_id, 'page_modules', true);
+                
+                error_log("Processing modules for page: $page_slug (ID: $post_id, Template: $page_template)");
+                
+                // Ensure we have a string before trying to handle it as JSON
+                if (!is_string($page_modules)) {
+                    error_log("Modules meta is not a string: " . gettype($page_modules));
+                    $page_modules = '';
+                }
+                
+                // Convert JSON string to array using safe parsing
+                $modules_array = safe_json_decode($page_modules, true);
+                if (empty($modules_array)) {
+                    error_log("No valid modules found in page_modules meta for page: $page_slug");
+                    $modules_array = [];
+                } else {
+                    error_log("Successfully decoded modules JSON. Found " . count($modules_array) . " modules");
+                }
+                
+                $modules_data = [];
+                
+                // Process each module
+                foreach ($modules_array as $index => $module_data) {
+                    if (!isset($module_data['id'])) {
+                        error_log("Missing module ID at index $index");
+                        continue;
+                    }
+                    
+                    $module_id = $module_data['id'];
+                    $module_post = get_post($module_id);
+                    
+                    if (!$module_post || $module_post->post_status !== 'publish') {
+                        error_log("Module not found or not published: $module_id");
+                        continue;
+                    }
+                    
+                    // Prepare module data for response
+                    $module = prepare_module_for_response($module_post);
+                    $module['order'] = $index;
+                    
+                    // Include any overridden settings from the page association
+                    if (isset($module_data['override_settings']) && $module_data['override_settings']) {
+                        if (isset($module_data['layout'])) {
+                            $module['layout'] = $module_data['layout'];
+                        }
+                        if (isset($module_data['full_width'])) {
+                            $module['fullWidth'] = $module_data['full_width'];
+                        }
+                        if (isset($module_data['background_color'])) {
+                            $module['backgroundColor'] = $module_data['background_color'];
+                        }
+                    }
+                    
+                    $modules_data[] = $module;
+                    error_log("Added module: {$module_post->post_title} (ID: {$module_id})");
+                }
+                
+                // For known problematic pages, log additional debugging info
+                if ($page_slug === 'moduloversikt' && empty($modules_data)) {
+                    error_log("DEBUG: No modules found for moduloversikt page");
+                    
+                    // Do a direct database query to check for modules
+                    global $wpdb;
+                    $meta_results = $wpdb->get_results(
+                        $wpdb->prepare(
+                            "SELECT * FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = 'page_modules'",
+                            $post_id
+                        )
+                    );
+                    
+                    if (empty($meta_results)) {
+                        error_log("No page_modules meta found in database!");
+                    } else {
+                        error_log("Found page_modules meta in database: " . print_r($meta_results, true));
+                        
+                        // Try to decode again directly from database result
+                        foreach ($meta_results as $meta) {
+                            $meta_value = $meta->meta_value;
+                            error_log("Meta value from DB: " . substr($meta_value, 0, 200));
+                            
+                            try {
+                                $test_decode = json_decode($meta_value, true);
+                                if (is_array($test_decode)) {
+                                    error_log("DB meta decoded successfully to array with " . count($test_decode) . " items");
+                                } else {
+                                    error_log("DB meta decoded to non-array: " . gettype($test_decode));
+                                }
+                            } catch (Exception $e) {
+                                error_log("Error decoding DB meta: " . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+                
+                error_log("Returning " . count($modules_data) . " modules for page: $page_slug");
+                return $modules_data;
+            },
+            'schema' => [
+                'description' => __('Modules associated with this page', 'steget'),
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object'
+                ]
+            ]
+        ]
+    );
+}
+add_action('rest_api_init', 'register_page_modules_rest_field');
+
+/**
  * Register REST field for module preview
  */
 function register_module_preview_rest_field()
@@ -360,58 +544,6 @@ function register_module_preview_rest_field()
     ]);
 }
 add_action('rest_api_init', 'register_module_preview_rest_field');
-
-
-/**
- * Register REST field for page modules
- */
-function register_page_modules_rest_field()
-{
-    register_rest_field(
-        ['page', 'post'],
-        'modules',
-        [
-            'get_callback' => function ($post) {
-                $page_modules = json_decode(get_post_meta($post['id'], 'page_modules', true), true) ?: [];
-                $modules_data = [];
-
-                foreach ($page_modules as $index => $module_data) {
-                    $module_id = $module_data['id'];
-                    $module_post = get_post($module_id);
-
-                    if ($module_post && $module_post->post_status === 'publish') {
-                        $module = prepare_module_for_response($module_post);
-
-                        // Set the order explicitly
-                        if (isset($module_data['order'])) {
-                            $module['order'] = intval($module_data['order']);
-                        } else {
-                            $module['order'] = $index; // Use the array index as fallback
-                        }
-
-                        $modules_data[] = $module;
-                    }
-                }
-
-                // Sort modules by order property
-                usort($modules_data, function ($a, $b) {
-                    return ($a['order'] ?? 0) - ($b['order'] ?? 0);
-                });
-
-                return $modules_data;
-            },
-            'schema' => [
-                'description' => __('Modules associated with this page', 'steget'),
-                'type' => 'array',
-                'items' => [
-                    'type' => 'object'
-                ]
-            ]
-        ]
-    );
-}
-add_action('rest_api_init', 'register_page_modules_rest_field');
-
 
 /**
  * Fix encoding in REST API responses for modules

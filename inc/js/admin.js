@@ -2,6 +2,20 @@
  * Admin JavaScript for the Theme Options page
  */
 jQuery(document).ready(function ($) {
+  // Prevent JSON parsing errors when typing in editor
+  // This ensures our module functions don't interfere with the editor
+  var safeJsonParse = function(jsonString) {
+    if (typeof jsonString !== 'string' || !jsonString.trim()) {
+      return null;
+    }
+    try {
+      return JSON.parse(jsonString);
+    } catch (e) {
+      console.log("Warning: Failed to parse JSON string: ", e);
+      return null;
+    }
+  };
+
   // Handle repeatable items (add)
   $(".steget-add-item").on("click", function () {
     var templateId = $(this).data("template");
@@ -135,4 +149,19 @@ jQuery(document).ready(function ($) {
     // Initialize color pickers
     $('.module-color-picker').wpColorPicker();
   }
+  
+  // Fix for WordPress editor JSON parsing errors
+  // This prevents our module code from trying to parse editor content as JSON
+  $(document).on('input change keyup', '.wp-editor-area', function() {
+    // Check if we're in the content editor
+    if ($(this).attr('id') === 'content') {
+      // Mark the editor as being modified to prevent other scripts from parsing its content
+      $(this).attr('data-content-modified', 'true');
+      
+      // Prevent JSON parsing of content by setting a flag
+      window.preventContentParsing = true;
+    }
+  });
+  
+  console.log('Admin JS loaded with JSON parsing safeguards');
 });
