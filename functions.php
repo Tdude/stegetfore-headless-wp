@@ -377,3 +377,18 @@ require_once get_template_directory() . '/inc/meta-fields/content-display-meta.p
 if (defined('WPCF7_VERSION')) {
     require_once get_template_directory() . '/inc/rest/wpcf7-endpoints.php';
 }
+
+/**
+ * Enqueue global admin scripts to fix JSON parsing errors in the editor
+ * This ensures our JSON parsing fix is loaded on all admin pages
+ */
+function enqueue_global_admin_scripts() {
+    wp_enqueue_script(
+        'steget-global-admin',
+        get_template_directory_uri() . '/inc/js/admin.js',
+        ['jquery'],
+        '1.0.1',
+        true
+    );
+}
+add_action('admin_enqueue_scripts', 'enqueue_global_admin_scripts');

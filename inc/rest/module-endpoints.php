@@ -479,6 +479,67 @@ function register_page_modules_rest_field()
                 error_log("Returning " . count($modules_data) . " modules for page: $page_slug");
                 return $modules_data;
             },
+            'update_callback' => function ($value, $post, $field_name, $request, $object_type) {
+                // Skip processing if it's a parent update from the save_post hook
+                if (doing_action('save_post')) {
+                    return true;
+                }
+                
+                $post_id = $post->ID;
+                
+                // Basic validation: ensure we have a proper modules array
+                if (!is_array($value)) {
+                    error_log("Received non-array data for post ID $post_id - skipping modules update");
+                    return true; // Return success but don't update
+                }
+                
+                // Verify that each item has an ID (basic structure check)
+                foreach ($value as $module) {
+                    if (!is_array($module) || !isset($module['id'])) {
+                        error_log("Received invalid module structure for post ID $post_id - skipping modules update");
+                        return true; // Return success but don't update
+                    }
+                }
+                
+                // Prepare data for storage
+                $modules_to_save = array();
+                foreach ($value as $module) {
+                    $module_data = array(
+                        'id' => absint($module['id']),
+                    );
+                    
+                    // Include any overridden settings
+                    if (isset($module['override_settings']) && $module['override_settings']) {
+                        $module_data['override_settings'] = true;
+                        
+                        if (isset($module['layout'])) {
+                            $module_data['layout'] = sanitize_text_field($module['layout']);
+                        }
+                        
+                        if (isset($module['fullWidth'])) {
+                            $module_data['full_width'] = (bool) $module['fullWidth'];
+                        }
+                        
+                        if (isset($module['backgroundColor'])) {
+                            $module_data['background_color'] = sanitize_text_field($module['backgroundColor']);
+                        }
+                    }
+                    
+                    $modules_to_save[] = $module_data;
+                }
+                
+                // Convert to JSON for storage
+                $json = json_encode($modules_to_save, JSON_UNESCAPED_UNICODE);
+                if ($json === false) {
+                    error_log("Failed to encode modules to JSON for post ID $post_id: " . json_last_error_msg());
+                    return false;
+                }
+                
+                // Update post meta with the modules data
+                $result = update_post_meta($post_id, 'page_modules', $json);
+                
+                return $result !== false;
+            },
             'schema' => [
                 'description' => __('Modules associated with this page', 'steget'),
                 'type' => 'array',

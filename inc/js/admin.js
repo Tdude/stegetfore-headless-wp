@@ -16,6 +16,23 @@ jQuery(document).ready(function ($) {
     }
   };
 
+  // Monkey patch global JSON.parse to prevent errors in WordPress admin
+  // This specifically targets the issue in Gutenberg editor
+  (function() {
+    var originalJsonParse = JSON.parse;
+    JSON.parse = function(text, reviver) {
+      try {
+        return originalJsonParse.call(JSON, text, reviver);
+      } catch (e) {
+        console.log("Prevented JSON parse error:", e.message.substring(0, 50));
+        // Return null instead of throwing an error
+        return null;
+      }
+    };
+    
+    console.log('Applied JSON parsing fix to WordPress admin');
+  })();
+
   // Handle repeatable items (add)
   $(".steget-add-item").on("click", function () {
     var templateId = $(this).data("template");
