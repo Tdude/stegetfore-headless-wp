@@ -393,7 +393,7 @@ function register_page_modules_rest_field()
                 }
                 
                 // Convert JSON string to array using safe parsing
-                $modules_array = safe_json_decode($page_modules, true);
+                $modules_array = json_decode($page_modules, true);
                 if (empty($modules_array)) {
                     error_log("No valid modules found in page_modules meta for page: $page_slug");
                     $modules_array = [];
@@ -553,60 +553,6 @@ function register_page_modules_rest_field()
 add_action('rest_api_init', 'register_page_modules_rest_field');
 
 /**
- * Register REST field for module preview
- */
-function register_module_preview_rest_field()
-{
-    register_rest_field('module', 'preview_html', [
-        'get_callback' => function ($post) {
-            // Get minimal rendered HTML for preview purposes
-            $template = get_post_meta($post['id'], 'module_template', true);
-
-            if (!$template) {
-                return '';
-            }
-
-            // Basic wrapper with module class
-            $html = '<div class="module module-' . esc_attr($template) . '">';
-
-            // Add basic content based on template type
-            switch ($template) {
-                case 'hero':
-                    $title = $post['title']['rendered'];
-                    $content = $post['content']['rendered'];
-                    $image = $post['featured_image_url'] ?? '';
-
-                    $html .= '<div class="hero-container">';
-                    if ($image) {
-                        $html .= '<div class="hero-image" style="background-image: url(\'' . esc_url($image) . '\');"></div>';
-                    }
-                    $html .= '<div class="hero-content">';
-                    $html .= '<h2>' . $title . '</h2>';
-                    $html .= $content;
-                    $html .= '</div></div>';
-                    break;
-
-                case 'testimonials':
-                    $html .= '<div class="testimonials-container">';
-                    $html .= '<h2>' . $post['title']['rendered'] . '</h2>';
-                    $html .= '<div class="testimonials-preview">' . __('Testimonials module preview', 'steget') . '</div>';
-                    $html .= '</div>';
-                    break;
-
-                default:
-                    $html .= '<h2>' . $post['title']['rendered'] . '</h2>';
-                    $html .= $post['content']['rendered'];
-            }
-
-            $html .= '</div>';
-
-            return $html;
-        }
-    ]);
-}
-add_action('rest_api_init', 'register_module_preview_rest_field');
-
-/**
  * Fix encoding in REST API responses for modules
  */
 function fix_module_rest_api_encoding($response, $post, $request)
@@ -616,7 +562,7 @@ function fix_module_rest_api_encoding($response, $post, $request)
     }
 
     $data = $response->get_data();
-
+    
     // Fix potentially problematic fields
     if (isset($data['points']) && is_array($data['points'])) {
         // Re-encode points through proper JSON encoding
@@ -637,3 +583,33 @@ function fix_module_rest_api_encoding($response, $post, $request)
     return $response;
 }
 add_filter('rest_prepare_module', 'fix_module_rest_api_encoding', 10, 3);
+
+/**
+ * Fix Swedish character encoding issues in REST API responses
+ * This is a targeted fix for the specific issue with Swedish characters
+ */
+function fix_swedish_characters_in_rest_api() {
+    // Modify how safe_json_decode handles Swedish characters
+    global $safe_json_decode_fixed;
+    
+    if (!isset($safe_json_decode_fixed) || !$safe_json_decode_fixed) {
+        // Only apply the fix once
+        $safe_json_decode_fixed = true;
+        
+        // Add a pre-filter to ensure wp_json_encode uses proper flags
+        add_filter('wp_json_encode_options', function($options) {
+            return $options | JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT;
+        });
+        
+        // Make sure response headers indicate proper UTF-8 encoding
+        add_filter('rest_pre_serve_request', function($served, $result) {
+            header('Content-Type: application/json; charset=utf-8');
+            return $served;
+        }, 10, 2);
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Applied Swedish character encoding fix to REST API');
+        }
+    }
+}
+add_action('rest_api_init', 'fix_swedish_characters_in_rest_api', 5); // Run early in the process
