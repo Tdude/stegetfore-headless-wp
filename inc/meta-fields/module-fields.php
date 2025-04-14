@@ -94,6 +94,18 @@ function register_module_meta_fields()
         }
     ]);
 
+    // Featured Posts layout style
+    register_post_meta('module', 'module_featured_posts_layout', [
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string',
+        'default' => 'traditional',
+        'sanitize_callback' => 'sanitize_text_field',
+        'auth_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ]);
+
     register_post_meta('module', 'module_testimonials_ids', [
         'show_in_rest' => true,
         'single' => true,

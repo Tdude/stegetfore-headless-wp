@@ -37,3 +37,23 @@ function register_featured_posts_endpoint() {
     ]);
 }
 add_action('rest_api_init', 'register_featured_posts_endpoint');
+
+/**
+ * Register blog settings endpoint to expose layout style and other blog configuration
+ */
+function register_blog_settings_endpoint() {
+    register_rest_route('steget/v1', '/blog-settings', [
+        'methods' => 'GET',
+        'callback' => function() {
+            return [
+                'layout_style' => get_option('blog_layout_style', 'traditional'),
+                'posts_per_page' => get_option('posts_per_page'),
+                'show_author' => true,
+                'show_date' => true,
+                'show_excerpt' => true
+            ];
+        },
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'register_blog_settings_endpoint');
