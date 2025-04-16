@@ -332,7 +332,7 @@ function get_fallback_questions_structure() {
             'title' => 'Anknytning',
             'questions' => [
                 'a1' => [
-                    'text' => 'Eleven söker kontakt med läraren vid behov',
+                    'text' => 'Admin har en testfråga här',
                     'options' => [
                         ['value' => '1', 'label' => '1', 'stage' => 'ej'],
                         ['value' => '2', 'label' => '2', 'stage' => 'ej'],
@@ -342,7 +342,7 @@ function get_fallback_questions_structure() {
                     ]
                 ],
                 'a2' => [
-                    'text' => 'Eleven tar emot tröst från läraren',
+                    'text' => 'Eleven får en fråga till här',
                     'options' => [
                         ['value' => '1', 'label' => '1', 'stage' => 'ej'],
                         ['value' => '2', 'label' => '2', 'stage' => 'ej'],
@@ -357,7 +357,7 @@ function get_fallback_questions_structure() {
             'title' => 'Ansvar',
             'questions' => [
                 'b1' => [
-                    'text' => 'Eleven tar ansvar för sina uppgifter',
+                    'text' => 'Programmeraren tar ansvar för sina uppgifter',
                     'options' => [
                         ['value' => '1', 'label' => '1', 'stage' => 'ej'],
                         ['value' => '2', 'label' => '2', 'stage' => 'ej'],
@@ -367,7 +367,7 @@ function get_fallback_questions_structure() {
                     ]
                 ],
                 'b2' => [
-                    'text' => 'Eleven följer klassens regler',
+                    'text' => 'Programmeraren följer klassens regler',
                     'options' => [
                         ['value' => '1', 'label' => '1', 'stage' => 'ej'],
                         ['value' => '2', 'label' => '2', 'stage' => 'ej'],

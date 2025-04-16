@@ -227,7 +227,7 @@ add_action('init', function() {
 */
 
 /**
- * This is the simplified approach for CF7 integration
+ * This is a simplified approach for CF7 integration
  */
 add_filter('rest_prepare_page', function ($response, $post, $request) {
     $data = $response->get_data();
@@ -333,7 +333,6 @@ function prevent_slash_buildup()
 
     // Add our own filter that properly handles JSON
     add_filter('update_post_metadata', function ($check, $object_id, $meta_key, $meta_value) {
-        // Only apply special handling to specific meta keys that store JSON
         $json_meta_keys = [
             'module_buttons',
             'module_selling_points',
@@ -344,17 +343,25 @@ function prevent_slash_buildup()
             'selling_points',
             'page_modules'
         ];
-
-        // For these JSON fields, use our special handling
-        if (
-            in_array($meta_key, $json_meta_keys) && is_string($meta_value) &&
-            (strpos($meta_value, '[') === 0 || strpos($meta_value, '{') === 0)
-        ) {
-            // It's already JSON, so don't add more slashes
-            return $check;
+    
+        if (in_array($meta_key, $json_meta_keys)) {
+            // If it's an array or object, encode as JSON
+            if (is_array($meta_value) || is_object($meta_value)) {
+                return json_encode($meta_value, JSON_UNESCAPED_UNICODE);
+            }
+            // If it's a string, check if it's valid JSON
+            if (is_string($meta_value)) {
+                json_decode($meta_value);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Already JSON, do nothing
+                    return $check;
+                } else {
+                    // Not JSON, just save as is
+                    return $meta_value;
+                }
+            }
         }
-
-        // For all other fields, let WordPress handle it normally
+    
         return $check;
     }, 10, 4);
 }

@@ -40,8 +40,14 @@ function render_module_buttons_meta_box($post) {
                         <?php _e('Secondary', 'steget'); ?></option>
                     <option value="outline" <?php selected($button['style'], 'outline'); ?>>
                         <?php _e('Outline', 'steget'); ?></option>
-                    <option value="link" <?php selected($button['style'], 'link'); ?>><?php _e('Link', 'steget'); ?>
-                    </option>
+                    <option value="link" <?php selected($button['style'], 'link'); ?>>
+                        <?php _e('Link', 'steget'); ?></option>
+                    <option value="ghost" <?php selected($button['style'], 'ghost'); ?>>
+                        <?php _e('Ghost', 'steget'); ?></option>
+                    <option value="default" <?php selected($button['style'], 'default'); ?>>
+                        <?php _e('Default', 'steget'); ?></option>
+                    <option value="destructive" <?php selected($button['style'], 'destructive'); ?>>
+                        <?php _e('Destructive', 'steget'); ?></option>
                 </select>
             </p>
             <p>
@@ -100,6 +106,9 @@ jQuery(document).ready(function($) {
                         <option value="secondary"><?php _e('Secondary', 'steget'); ?></option>
                         <option value="outline"><?php _e('Outline', 'steget'); ?></option>
                         <option value="link"><?php _e('Link', 'steget'); ?></option>
+                        <option value="ghost"><?php _e('Ghost', 'steget'); ?></option>
+                        <option value="default"><?php _e('Default', 'steget'); ?></option>
+                        <option value="destructive"><?php _e('Destructive', 'steget'); ?></option>
                     </select>
                 </p>
                 <p>
