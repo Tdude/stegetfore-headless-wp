@@ -170,33 +170,38 @@ function register_show_content_with_modules_rest_field() {
                 if (!current_user_can('edit_post', $post->ID)) {
                     return false;
                 }
-                
-                // Ensure we have an array with the expected structure
+
+                // If not an array, try to decode or default
                 if (!is_array($value)) {
                     if (is_string($value)) {
-                        // Try to decode if it's a JSON string
-                        $value = safe_json_decode($value, true);
-                        if (!is_array($value)) {
-                            return false;
+                        $decoded = safe_json_decode($value, true);
+                        if (is_array($decoded)) {
+                            $value = $decoded;
+                        } else {
+                            // Default to safe values if string is not JSON
+                            $value = [
+                                'show_content_with_modules' => true,
+                                'content_position' => 'before',
+                            ];
                         }
                     } else {
                         return false;
                     }
                 }
-                
+
                 // Update each setting individually
                 if (isset($value['show_content_with_modules'])) {
                     $show_content = $value['show_content_with_modules'] ? '1' : '0';
                     update_post_meta($post->ID, 'show_content_with_modules', $show_content);
                 }
-                
+
                 if (isset($value['content_position'])) {
-                    $position = in_array($value['content_position'], ['before', 'after']) 
-                                ? $value['content_position'] 
-                                : 'before';
+                    $position = in_array($value['content_position'], ['before', 'after'])
+                        ? $value['content_position']
+                        : 'before';
                     update_post_meta($post->ID, 'content_position', $position);
                 }
-                
+
                 return true;
             },
             'schema' => [
