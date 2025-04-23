@@ -12,11 +12,29 @@ if (!defined('ABSPATH'))
 // Load module components
 $module_components = [
     '/meta-fields/module-fields.php',
+];
+
+// Dynamically require all content-type module files
+$content_types_dir = get_template_directory() . '/inc/admin/modules/content-types/';
+if (is_dir($content_types_dir)) {
+    foreach (glob($content_types_dir . '*.php') as $content_type_file) {
+        require_once $content_type_file;
+        error_log('Loaded content-type module: ' . basename($content_type_file));
+    }
+}
+
+// Continue loading the rest of the module components
+$module_components = array_merge($module_components, [
     '/admin/module-ui.php',
     '/admin/module-page-integration.php',
     '/admin/module-enhancements.php',
+    '/admin/modules/template-fields.php',
+    '/admin/modules/buttons.php',
+    '/admin/modules/saving.php',
+    '/admin/modules/base.php',
+    '/admin/modules/admin-list.php',
     '/rest/module-endpoints.php'
-];
+]);
 
 foreach ($module_components as $component) {
     $component_path = get_template_directory() . '/inc' . $component;

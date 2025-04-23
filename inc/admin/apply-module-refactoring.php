@@ -17,6 +17,7 @@ $required_files = [
     $base_path . 'admin-list.php',
     $base_path . 'content-types/hero.php',
     $base_path . 'content-types/featured-posts.php',
+    $base_path . 'content-types/cta.php',
     $base_path . 'content-types/testimonials.php',
     $base_path . 'content-types/gallery.php',
     $base_path . 'content-types/faq.php',

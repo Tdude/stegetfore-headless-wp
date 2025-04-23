@@ -191,7 +191,7 @@ function prepare_module_for_response($post)
     $existing_order = !empty($explicit_order) ? intval($explicit_order) : $menu_order;
 
     // For JSON fields, properly decode to remove excessive slashes
-    $json_fields = ['buttons', 'selling_points', 'stats', 'testimonials', 'faq_items', 'tabbed_content'];
+    $json_fields = ['selling_points', 'stats', 'testimonials', 'faq_items', 'tabbed_content'];
     foreach ($json_fields as $field) {
         $meta_key = 'module_' . $field;
         $meta_value = get_post_meta($post->ID, $meta_key, true);
@@ -205,6 +205,17 @@ function prepare_module_for_response($post)
         }
     }
 
+    // --- BUTTONS: Always decode as array of objects, never array of JSON strings ---
+    $buttons_raw = get_post_meta($post->ID, 'module_buttons', true);
+    $buttons = json_decode($buttons_raw, true);
+    // If any item is a string, legacy: decode it
+    if (is_array($buttons) && isset($buttons[0]) && is_string($buttons[0])) {
+        $buttons = array_map(function($btn) {
+            return is_string($btn) ? json_decode($btn, true) : $btn;
+        }, $buttons);
+    }
+    $data['buttons'] = is_array($buttons) ? $buttons : [];
+
     $data = [
         'id' => $post->ID,
         'title' => $post->post_title,
@@ -217,7 +228,6 @@ function prepare_module_for_response($post)
         'layout' => get_post_meta($post->ID, 'module_layout', true),
         'fullWidth' => (bool) get_post_meta($post->ID, 'module_full_width', true), // camelCase
         'backgroundColor' => get_post_meta($post->ID, 'module_background_color', true), // camelCase
-        'buttons' => json_decode(get_post_meta($post->ID, 'module_buttons', true), true),
         'categories' => wp_get_post_terms($post->ID, 'module_category', ['fields' => 'slugs']),
         'placements' => wp_get_post_terms($post->ID, 'module_placement', ['fields' => 'names']),
         'type' => $type,
@@ -228,6 +238,24 @@ function prepare_module_for_response($post)
         // Initialize points as empty array by default for selling-points type
         'points' => $type === 'selling-points' ? [] : null
     ];
+
+    // Always include buttons for hero and cta modules
+    if (in_array($template, ['hero', 'cta'])) {
+        $data['buttons'] = is_array($buttons) ? $buttons : [];
+    }
+    // Always include items for faq modules
+    if ($template === 'faq') {
+        $faq_items = get_post_meta($post->ID, 'module_faq_items', true);
+        $data['items'] = is_string($faq_items) ? json_decode(stripslashes_deep($faq_items), true) : [];
+        if (!is_array($data['items'])) $data['items'] = [];
+        $data['allowMultipleOpen'] = true;
+    }
+    if ($template === 'testimonials') {
+        $testimonials = get_post_meta($post->ID, 'module_testimonials', true);
+        $data['testimonials'] = is_string($testimonials) ? json_decode(stripslashes_deep($testimonials), true) : [];
+        if (!is_array($data['testimonials'])) $data['testimonials'] = [];
+        $data['displayStyle'] = get_post_meta($post->ID, 'module_testimonials_style', true) ?: 'carousel';
+    }
 
     // Format module-specific data to match React component props
     switch ($template) {
@@ -571,7 +599,7 @@ function fix_module_rest_api_encoding($response, $post, $request)
     }
 
     // Do the same for other problematic fields
-    $json_fields = ['buttons', 'items', 'tabs'];
+    $json_fields = ['items', 'tabs'];
     foreach ($json_fields as $field) {
         if (isset($data[$field]) && is_array($data[$field])) {
             $json_encoded = wp_json_encode($data[$field], JSON_UNESCAPED_UNICODE);

@@ -161,6 +161,25 @@ function save_module_meta($post_id) {
                 update_post_meta($post_id, 'module_featured_posts_settings', json_encode($featured_posts_settings));
                 break;
 
+            case 'faq':
+                // FAQ module saving
+                $faq_items = [];
+                if (isset($_POST['faq_question']) && is_array($_POST['faq_question'])) {
+                    $count = count($_POST['faq_question']);
+                    for ($i = 0; $i < $count; $i++) {
+                        $question = trim($_POST['faq_question'][$i]);
+                        $answer = isset($_POST['faq_answer'][$i]) ? trim($_POST['faq_answer'][$i]) : '';
+                        if ($question !== '' || $answer !== '') {
+                            $faq_items[] = [
+                                'question' => sanitize_text_field($question),
+                                'answer' => sanitize_textarea_field($answer)
+                            ];
+                        }
+                    }
+                }
+                update_post_meta($post_id, 'module_faq_items', json_encode($faq_items));
+                break;
+
             // Add other template cases as needed
         }
     }

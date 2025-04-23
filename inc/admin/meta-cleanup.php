@@ -55,6 +55,7 @@ function aggressive_fix_slashed_meta_data()
         "'module_%'",
         "'%_points'",
         "'page_modules'",
+        "'cta_%'",
         "'hero_%'",
         "'selling_points%'",
         "'%description%'",
@@ -167,3 +168,51 @@ function render_fix_meta_page()
 </div>
 <?php
 }
+
+// --- MIGRATION: Standardize module_buttons to always be a JSON array of objects ---
+function migrate_module_buttons_to_array_of_objects() {
+    global $wpdb;
+    $meta_key = 'module_buttons';
+    $results = $wpdb->get_results($wpdb->prepare(
+        "SELECT post_id, meta_value FROM $wpdb->postmeta WHERE meta_key = %s",
+        $meta_key
+    ));
+    $fixed = 0;
+    foreach ($results as $row) {
+        $val = $row->meta_value;
+        $decoded = json_decode($val, true);
+        // Only migrate if it's an array of JSON strings
+        if (is_array($decoded) && isset($decoded[0]) && is_string($decoded[0])) {
+            $new = array_map(function($btn) {
+                return is_string($btn) ? json_decode($btn, true) : $btn;
+            }, $decoded);
+            // Only update if all items are arrays (objects)
+            if (count($new) && is_array($new[0])) {
+                update_post_meta($row->post_id, $meta_key, json_encode($new));
+                $fixed++;
+            }
+        }
+    }
+    return $fixed;
+}
+
+// Add to admin page
+add_action('admin_menu', function() {
+    add_submenu_page(
+        'tools.php',
+        'Migrate Module Buttons',
+        'Migrate Module Buttons',
+        'manage_options',
+        'migrate-module-buttons',
+        function() {
+            if (isset($_POST['migrate_module_buttons'])) {
+                $fixed = migrate_module_buttons_to_array_of_objects();
+                echo '<div class="notice notice-success"><p>Migrated ' . intval($fixed) . ' module_buttons meta entries.</p></div>';
+            }
+            echo '<div class="wrap"><h1>Migrate Module Buttons</h1>';
+            echo '<form method="post"><input type="hidden" name="migrate_module_buttons" value="1" />';
+            echo '<button class="button button-primary">Run Migration</button>';
+            echo '</form></div>';
+        }
+    );
+});

@@ -1,6 +1,7 @@
 <?php
 /**
  * Hero module template fields
+ * inc/admin/modules/content-types/hero.php
  * 
  * @package Steget
  */
