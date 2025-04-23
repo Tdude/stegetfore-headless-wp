@@ -5,6 +5,38 @@
  * @package Steget
  */
 
+// --- DRY Helper for saving repeatable JSON meta fields ---
+function save_repeatable_json_meta($post_id, $field_prefix, $field_names, $meta_key) {
+    $count = 0;
+    foreach ($field_names as $field) {
+        if (isset($_POST[$field_prefix . '_' . $field]) && is_array($_POST[$field_prefix . '_' . $field])) {
+            $count = max($count, count($_POST[$field_prefix . '_' . $field]));
+        }
+    }
+    $items = [];
+    for ($i = 0; $i < $count; $i++) {
+        $item = [];
+        foreach ($field_names as $field) {
+            $val = isset($_POST[$field_prefix . '_' . $field][$i]) ? $_POST[$field_prefix . '_' . $field][$i] : '';
+            // Use appropriate sanitizer
+            if (strpos($field, 'image') !== false || strpos($field, 'url') !== false) {
+                $item[$field] = esc_url_raw($val);
+            } elseif (strpos($field, 'content') !== false || strpos($field, 'description') !== false || strpos($field, 'answer') !== false) {
+                $item[$field] = sanitize_textarea_field($val);
+            } elseif (strpos($field, 'rating') !== false || strpos($field, 'position') !== false || strpos($field, 'count') !== false) {
+                $item[$field] = intval($val);
+            } else {
+                $item[$field] = sanitize_text_field($val);
+            }
+        }
+        // Only add if at least one field is not empty
+        if (count(array_filter($item, function($v){ return $v !== '' && $v !== null; })) > 0) {
+            $items[] = $item;
+        }
+    }
+    update_post_meta($post_id, $meta_key, json_encode($items, JSON_UNESCAPED_UNICODE));
+}
+
 /**
  * Save module meta data
  */
@@ -60,10 +92,10 @@ function save_module_meta($post_id) {
                     'alignment' => sanitize_text_field($_POST['hero_alignment']),
                     'min_height' => intval($_POST['hero_min_height'])
                 ];
-                update_post_meta($post_id, 'module_hero_settings', json_encode($hero_settings));
+                update_post_meta($post_id, 'module_hero_settings', json_encode($hero_settings, JSON_UNESCAPED_UNICODE));
                 break;
 
-            case 'selling-points':
+            case 'selling_points':
                 // Process selling points data
                 $points_count = isset($_POST['selling_points_count']) ? intval($_POST['selling_points_count']) : 0;
                 $points = [];
@@ -86,7 +118,7 @@ function save_module_meta($post_id) {
                     'points_per_row' => intval($_POST['selling_points_per_row']),
                     'points' => $points
                 ];
-                update_post_meta($post_id, 'module_selling_points_settings', json_encode($selling_points_settings));
+                update_post_meta($post_id, 'module_selling_points_settings', json_encode($selling_points_settings, JSON_UNESCAPED_UNICODE));
                 break;
 
             case 'stats':
@@ -113,38 +145,39 @@ function save_module_meta($post_id) {
                     'stats_per_row' => intval($_POST['stats_per_row']),
                     'stats' => $stats
                 ];
-                update_post_meta($post_id, 'module_stats_settings', json_encode($stats_settings));
+                update_post_meta($post_id, 'module_stats_settings', json_encode($stats_settings, JSON_UNESCAPED_UNICODE));
                 break;
 
             case 'testimonials':
-                // Process testimonials data
-                $testimonials_count = isset($_POST['testimonials_count']) ? intval($_POST['testimonials_count']) : 0;
-                $testimonials = [];
-                
-                for ($i = 0; $i < $testimonials_count; $i++) {
-                    if (isset($_POST['testimonial_text'][$i]) && !empty($_POST['testimonial_text'][$i])) {
-                        $testimonials[] = [
-                            'text' => sanitize_textarea_field($_POST['testimonial_text'][$i]),
-                            'author' => sanitize_text_field($_POST['testimonial_author'][$i]),
-                            'position' => sanitize_text_field($_POST['testimonial_position'][$i]),
-                            'image' => esc_url_raw($_POST['testimonial_image'][$i]),
-                            'rating' => intval($_POST['testimonial_rating'][$i])
-                        ];
-                    }
-                }
-                
+                // DRY: Use helper for testimonials
+                save_repeatable_json_meta(
+                    $post_id,
+                    'testimonial',
+                    ['text', 'author', 'position', 'image', 'rating'],
+                    'module_testimonials'
+                );
+                // Save settings (title, subtitle, layout, etc.) separately if needed
                 $testimonials_settings = [
                     'title' => sanitize_text_field($_POST['testimonials_title']),
                     'subtitle' => sanitize_textarea_field($_POST['testimonials_subtitle']),
                     'layout' => sanitize_text_field($_POST['testimonials_layout']),
                     'display_type' => sanitize_text_field($_POST['testimonials_display']),
-                    'show_ratings' => isset($_POST['testimonials_show_ratings']),
-                    'testimonials' => $testimonials
+                    'show_ratings' => isset($_POST['testimonials_show_ratings'])
                 ];
-                update_post_meta($post_id, 'module_testimonials_settings', json_encode($testimonials_settings));
+                update_post_meta($post_id, 'module_testimonials_settings', json_encode($testimonials_settings, JSON_UNESCAPED_UNICODE));
                 break;
 
-            case 'featured-posts':
+            case 'tabbed_content':
+                // DRY: Use helper for tabbed content
+                save_repeatable_json_meta(
+                    $post_id,
+                    'tab',
+                    ['title', 'content'],
+                    'module_tabbed_content'
+                );
+                break;
+
+            case 'featured_posts':
                 $categories = isset($_POST['featured_posts_categories']) ? array_map('intval', $_POST['featured_posts_categories']) : [];
                 
                 $featured_posts_settings = [
@@ -158,7 +191,7 @@ function save_module_meta($post_id) {
                     'show_author' => isset($_POST['featured_posts_show_author']),
                     'layout_style' => sanitize_text_field($_POST['featured_posts_layout_style'])
                 ];
-                update_post_meta($post_id, 'module_featured_posts_settings', json_encode($featured_posts_settings));
+                update_post_meta($post_id, 'module_featured_posts_settings', json_encode($featured_posts_settings, JSON_UNESCAPED_UNICODE));
                 break;
 
             case 'faq':
@@ -177,7 +210,7 @@ function save_module_meta($post_id) {
                         }
                     }
                 }
-                update_post_meta($post_id, 'module_faq_items', json_encode($faq_items));
+                update_post_meta($post_id, 'module_faq_items', json_encode($faq_items, JSON_UNESCAPED_UNICODE));
                 break;
 
             // Add other template cases as needed
@@ -201,9 +234,9 @@ function save_module_meta($post_id) {
             }
         }
         
-        update_post_meta($post_id, 'module_buttons', json_encode($buttons));
+        update_post_meta($post_id, 'module_buttons', json_encode($buttons, JSON_UNESCAPED_UNICODE));
     } else {
-        update_post_meta($post_id, 'module_buttons', json_encode([]));
+        update_post_meta($post_id, 'module_buttons', json_encode([], JSON_UNESCAPED_UNICODE));
     }
 }
 add_action('save_post_module', 'save_module_meta');

@@ -181,4 +181,37 @@ jQuery(document).ready(function ($) {
   });
   
   console.log('Admin JS loaded with JSON parsing safeguards');
+
+  // --- WordPress Media Uploader for steget-media-field (unified for all modules) ---
+  // Image upload for all .steget-media-field instances
+  $(document).on('click', '.steget-upload-image', function(e) {
+    e.preventDefault();
+    var button = $(this);
+    var field = button.closest('.steget-media-field');
+    var imageInput = field.find('.steget-media-input');
+    var imagePreview = field.find('.steget-image-preview');
+    var removeButton = field.find('.steget-remove-image');
+
+    // Use WordPress media uploader
+    var custom_uploader = wp.media({
+      title: (typeof stegetAdminI18n !== 'undefined' && stegetAdminI18n.select_image) ? stegetAdminI18n.select_image : 'Select Image',
+      button: {
+        text: (typeof stegetAdminI18n !== 'undefined' && stegetAdminI18n.use_image) ? stegetAdminI18n.use_image : 'Use this image'
+      },
+      multiple: false
+    }).on('select', function() {
+      var attachment = custom_uploader.state().get('selection').first().toJSON();
+      imageInput.val(attachment.url);
+      imagePreview.html('<img src="' + attachment.url + '" style="max-width:100%;height:auto;" />');
+      removeButton.show();
+    }).open();
+  });
+
+  // Remove image
+  $(document).on('click', '.steget-remove-image', function() {
+    var field = $(this).closest('.steget-media-field');
+    field.find('.steget-media-input').val('');
+    field.find('.steget-image-preview').empty();
+    $(this).hide();
+  });
 });

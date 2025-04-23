@@ -3,6 +3,14 @@
  *
  * Register REST API endpoints for modules
  */
+
+// --- DRY Helper for getting JSON meta array ---
+function get_json_meta_array($post_id, $meta_key) {
+    $raw = get_post_meta($post_id, $meta_key, true);
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
 function register_modules_rest_routes()
 {
     register_rest_route('steget/v1', '/modules', [
@@ -191,18 +199,15 @@ function prepare_module_for_response($post)
     $existing_order = !empty($explicit_order) ? intval($explicit_order) : $menu_order;
 
     // For JSON fields, properly decode to remove excessive slashes
-    $json_fields = ['selling_points', 'stats', 'testimonials', 'faq_items', 'tabbed_content'];
-    foreach ($json_fields as $field) {
-        $meta_key = 'module_' . $field;
-        $meta_value = get_post_meta($post->ID, $meta_key, true);
-
-        if (!empty($meta_value)) {
-            // Strip slashes if needed and decode the JSON
-            $decoded = json_decode(stripslashes_deep($meta_value), true);
-            if (is_array($decoded)) {
-                $data[$field] = $decoded;
-            }
-        }
+    $json_fields = [
+        'selling_points' => 'module_selling_points',
+        'stats' => 'module_stats',
+        'testimonials' => 'module_testimonials',
+        'faq_items' => 'module_faq_items',
+        'tabbed_content' => 'module_tabbed_content'
+    ];
+    foreach ($json_fields as $field => $meta_key) {
+        $data[$field] = get_json_meta_array($post->ID, $meta_key);
     }
 
     // --- BUTTONS: Always decode as array of objects, never array of JSON strings ---
@@ -270,16 +275,10 @@ function prepare_module_for_response($post)
             break;
 
         case 'selling_points':
-            $points = json_decode(get_post_meta($post->ID, 'module_selling_points', true), true);
-            error_log('Raw selling points meta: ' . print_r(get_post_meta($post->ID, 'module_selling_points', true), true));
-            error_log('Decoded points: ' . print_r($points, true));
-            
-            // Make sure we have an array
-            $points = is_array($points) ? $points : [];
+            $points = get_json_meta_array($post->ID, 'module_selling_points');
             
             // Transform points to match frontend structure
             $data['points'] = array_map(function($point) {
-                error_log('Processing point: ' . print_r($point, true));
                 return [
                     'id' => uniqid(), // Add an ID for React keys
                     'title' => $point['title'] ?? '',
@@ -288,7 +287,6 @@ function prepare_module_for_response($post)
                     'content' => $point['description'] ?? ''
                 ];
             }, $points);
-            error_log('Final points data: ' . print_r($data['points'], true));
             
             $data['columns'] = intval(get_post_meta($post->ID, 'module_columns', true) ?: 3);
             // Ensure type is consistent with template name
@@ -306,18 +304,18 @@ function prepare_module_for_response($post)
             break;
 
         case 'testimonials':
-            $testimonials = json_decode(get_post_meta($post->ID, 'module_testimonials', true), true) ?: [];
+            $testimonials = get_json_meta_array($post->ID, 'module_testimonials');
             $data['testimonials'] = $testimonials;
             $data['displayStyle'] = get_post_meta($post->ID, 'module_testimonials_style', true) ?: 'carousel';
             break;
 
         case 'faq':
-            $data['items'] = json_decode(get_post_meta($post->ID, 'module_faq_items', true), true) ?: [];
+            $data['items'] = get_json_meta_array($post->ID, 'module_faq_items');
             $data['allowMultipleOpen'] = true; // camelCase
             break;
 
         case 'tabbed_content':
-            $data['tabs'] = json_decode(get_post_meta($post->ID, 'module_tabbed_content', true), true) ?: [];
+            $data['tabs'] = get_json_meta_array($post->ID, 'module_tabbed_content');
             break;
 
         case 'featured_posts':

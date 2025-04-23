@@ -21,7 +21,7 @@ function render_module_template_settings_meta_box($post) {
         case 'hero':
             render_hero_template_fields($post);
             break;
-        case 'selling-points':
+        case 'selling_points':
             render_selling_points_template_fields($post);
             break;
         case 'stats':
@@ -36,7 +36,7 @@ function render_module_template_settings_meta_box($post) {
         case 'faq':
             render_faq_template_fields($post);
             break;
-        case 'tabbed-content':
+        case 'tabbed_content':
             render_tabbed_content_template_fields($post);
             break;
         case 'charts':
@@ -63,10 +63,10 @@ function render_module_template_settings_meta_box($post) {
         case 'cta':
             render_cta_template_fields($post);
             break;
-        case 'text-media':
+        case 'text_media':
             render_text_media_template_fields($post);
             break;
-        case 'featured-posts':
+        case 'featured_posts':
             render_featured_posts_template_fields($post);
             break;
         default:
