@@ -632,6 +632,9 @@ function fix_swedish_characters_in_rest_api() {
         
         // Make sure response headers indicate proper UTF-8 encoding
         add_filter('rest_pre_serve_request', function($served, $result) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Requested-With, Accept');
             header('Content-Type: application/json; charset=utf-8');
             return $served;
         }, 10, 2);

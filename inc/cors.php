@@ -16,12 +16,12 @@ function add_cors_headers()
     }
     if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
         header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Requested-With, Accept");
         header("Access-Control-Max-Age: 86400");
         exit(0);
     }
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
+    header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization");
     header("Access-Control-Allow-Credentials: true");
 }
 add_action('rest_api_init', function () {
