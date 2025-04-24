@@ -168,13 +168,31 @@ function save_module_meta($post_id) {
                 break;
 
             case 'tabbed_content':
-                // DRY: Use helper for tabbed content
-                save_repeatable_json_meta(
-                    $post_id,
-                    'tab',
-                    ['title', 'content'],
-                    'module_tabbed_content'
-                );
+                // DRY: Use helper for tabbed content with image
+                $tab_titles = isset($_POST['tab_title']) ? $_POST['tab_title'] : [];
+                $tab_contents = isset($_POST['tab_content']) ? $_POST['tab_content'] : [];
+                $tab_images = isset($_POST['tab_image']) ? $_POST['tab_image'] : [];
+                $tab_image_aligns = isset($_POST['tab_image_align']) ? $_POST['tab_image_align'] : [];
+                $tabs = [];
+                $count = max(count($tab_titles), count($tab_contents), count($tab_images), count($tab_image_aligns));
+                for ($i = 0; $i < $count; $i++) {
+                    $title = isset($tab_titles[$i]) ? sanitize_text_field($tab_titles[$i]) : '';
+                    $content = isset($tab_contents[$i]) ? sanitize_textarea_field($tab_contents[$i]) : '';
+                    $image = isset($tab_images[$i]) ? esc_url_raw($tab_images[$i]) : '';
+                    $imageAlign = isset($tab_image_aligns[$i]) ? sanitize_text_field($tab_image_aligns[$i]) : 'left';
+                    if ($title !== '' || $content !== '' || $image !== '') {
+                        $tabs[] = [
+                            'title' => $title,
+                            'content' => $content,
+                            'image' => $image,
+                            'imageAlign' => $imageAlign
+                        ];
+                    }
+                }
+                update_post_meta($post_id, 'module_tabbed_content', json_encode($tabs, JSON_UNESCAPED_UNICODE));
+                // Save layout setting
+                $layout = isset($_POST['tabbed_content_layout']) ? sanitize_text_field($_POST['tabbed_content_layout']) : '';
+                update_post_meta($post_id, 'tabbed_content_layout', $layout);
                 break;
 
             case 'featured_posts':

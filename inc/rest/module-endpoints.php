@@ -316,6 +316,9 @@ function prepare_module_for_response($post)
 
         case 'tabbed_content':
             $data['tabs'] = get_json_meta_array($post->ID, 'module_tabbed_content');
+            $data['layout'] = get_post_meta($post->ID, 'tabbed_content_layout', true)
+    ?: get_post_meta($post->ID, 'module_tabbed_content_layout', true)
+    ?: get_post_meta($post->ID, 'module_layout', true);
             break;
 
         case 'featured_posts':

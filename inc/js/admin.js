@@ -182,7 +182,35 @@ jQuery(document).ready(function ($) {
   
   console.log('Admin JS loaded with JSON parsing safeguards');
 
-  // --- WordPress Media Uploader for steget-media-field (unified for all modules) ---
+  // --- WordPress Media Uploader for all .select-media and .steget-media-field inputs ---
+  function stegetUnifiedMediaButtonHandler() {
+    $(document).on('click', '.select-media', function(e) {
+      e.preventDefault();
+      var button = $(this);
+      // Try to find the closest input[type=text] with .steget-media-field class
+      var input = button.siblings('input.steget-media-field');
+      if (!input.length) {
+        // fallback: find input in parent if not a sibling
+        input = button.closest('.tab-item, .testimonial-item, .media-field').find('input.steget-media-field').first();
+      }
+      var custom_uploader = wp.media({
+        title: (typeof stegetAdminI18n !== 'undefined' && stegetAdminI18n.select_image) ? stegetAdminI18n.select_image : 'Select Image',
+        button: {
+          text: (typeof stegetAdminI18n !== 'undefined' && stegetAdminI18n.use_image) ? stegetAdminI18n.use_image : 'Use this image'
+        },
+        multiple: false
+      });
+      custom_uploader.on('select', function() {
+        var attachment = custom_uploader.state().get('selection').first().toJSON();
+        input.val(attachment.url);
+      });
+      custom_uploader.open();
+    });
+  }
+
+  // Call the unified handler once on page load
+  stegetUnifiedMediaButtonHandler();
+
   // Image upload for all .steget-media-field instances
   $(document).on('click', '.steget-upload-image', function(e) {
     e.preventDefault();
