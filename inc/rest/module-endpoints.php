@@ -317,8 +317,8 @@ function prepare_module_for_response($post)
         case 'tabbed_content':
             $data['tabs'] = get_json_meta_array($post->ID, 'module_tabbed_content');
             $data['layout'] = get_post_meta($post->ID, 'tabbed_content_layout', true)
-    ?: get_post_meta($post->ID, 'module_tabbed_content_layout', true)
-    ?: get_post_meta($post->ID, 'module_layout', true);
+                ?: get_post_meta($post->ID, 'module_tabbed_content_layout', true)
+                ?: get_post_meta($post->ID, 'module_layout', true);
             break;
 
         case 'featured_posts':
@@ -632,9 +632,12 @@ function fix_swedish_characters_in_rest_api() {
         
         // Make sure response headers indicate proper UTF-8 encoding
         add_filter('rest_pre_serve_request', function($served, $result) {
-            header('Access-Control-Allow-Origin: *');
+            if (isset($_SERVER['HTTP_ORIGIN'])) {
+                header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+            }
             header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
             header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Requested-With, Accept');
+            header('Access-Control-Allow-Credentials: true');
             header('Content-Type: application/json; charset=utf-8');
             return $served;
         }, 10, 2);
