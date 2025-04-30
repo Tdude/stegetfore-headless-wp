@@ -40,25 +40,40 @@ add_action('rest_api_init', function () {
     register_rest_route('steget/v1', '/posts-extended', [
         'methods' => 'GET',
         'callback' => function ($request) {
-            $posts = get_posts([
+            $page = max(1, intval($request->get_param('page')));
+            $per_page = max(1, min(100, intval($request->get_param('per_page')) ?: 12)); // default 12, max 100
+            $args = [
                 'post_type' => 'post',
-                'posts_per_page' => 12,
+                'posts_per_page' => $per_page,
+                'paged' => $page,
                 'post_status' => 'publish'
-            ]);
+            ];
+            $query = new WP_Query($args);
+            $total_posts = $query->found_posts;
+            $posts = $query->posts;
 
-            return array_map(function ($post) {
-                $featured_image = get_the_post_thumbnail_url($post->ID, 'full');
+            $mapped_posts = array_map(function ($post) {
+                $featured_image_id = get_post_thumbnail_id($post->ID);
+                $featured_image = $featured_image_id ? wp_get_attachment_image_url($featured_image_id, 'full') : null;
                 return [
                     'id' => $post->ID,
-                    'title' => $post->post_title,
-                    'content' => $post->post_content,
-                    'excerpt' => $post->post_excerpt,
+                    'title' => [ 'rendered' => $post->post_title ],
+                    'content' => [ 'rendered' => apply_filters('the_content', $post->post_content) ],
+                    'excerpt' => [ 'rendered' => get_the_excerpt($post->ID) ],
                     'slug' => $post->post_name,
                     'featured_image' => $featured_image,
+                    'featured_image_url' => $featured_image,
                     'date' => $post->post_date,
                     'modified' => $post->post_modified
                 ];
             }, $posts);
+
+            return [
+                'posts' => $mapped_posts,
+                'total' => $total_posts,
+                'page' => $page,
+                'per_page' => $per_page
+            ];
         },
         'permission_callback' => '__return_true'
     ]);
