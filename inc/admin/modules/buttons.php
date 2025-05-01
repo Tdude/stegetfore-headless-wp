@@ -1,5 +1,6 @@
 <?php
 /**
+ * File: inc/admin/modules/buttons.php
  * Button functionality for modules
  * 
  * @package Steget
@@ -46,6 +47,8 @@ function render_module_buttons_meta_box($post) {
                         <?php _e('Ghost', 'steget'); ?></option>
                     <option value="default" <?php selected($button['style'], 'default'); ?>>
                         <?php _e('Default', 'steget'); ?></option>
+                    <option value="success" <?php selected($button['style'], 'success'); ?>>
+                        <?php _e('Success', 'steget'); ?></option>
                     <option value="destructive" <?php selected($button['style'], 'destructive'); ?>>
                         <?php _e('Destructive', 'steget'); ?></option>
                 </select>
@@ -53,11 +56,13 @@ function render_module_buttons_meta_box($post) {
             <p>
                 <label for="button_size_<?php echo $index; ?>"><strong><?php _e('Button Size', 'steget'); ?>:</strong></label><br>
                 <select name="button_size[]" id="button_size_<?php echo $index; ?>" class="widefat">
-                    <option value="sm" <?php selected($button['size'], 'sm'); ?>><?php _e('Small', 'steget'); ?>
+                    <option value="sm" <?php selected($button['size'] ?? '', 'sm'); ?>><?php _e('Small', 'steget'); ?>
                     </option>
-                    <option value="md" <?php selected($button['size'], 'md'); ?>><?php _e('Medium', 'steget'); ?>
+                    <option value="md" <?php selected($button['size'] ?? '', 'md'); ?>><?php _e('Medium', 'steget'); ?>
                     </option>
-                    <option value="lg" <?php selected($button['size'], 'lg'); ?>><?php _e('Large', 'steget'); ?>
+                    <option value="lg" <?php selected($button['size'] ?? '', 'lg'); ?>><?php _e('Large', 'steget'); ?>
+                    </option>
+                    <option value="xl" <?php selected($button['size'] ?? '', 'xl'); ?>><?php _e('Extra Large', 'steget'); ?>
                     </option>
                 </select>
             </p>
@@ -108,6 +113,7 @@ jQuery(document).ready(function($) {
                         <option value="link"><?php _e('Link', 'steget'); ?></option>
                         <option value="ghost"><?php _e('Ghost', 'steget'); ?></option>
                         <option value="default"><?php _e('Default', 'steget'); ?></option>
+                        <option value="success"><?php _e('Success', 'steget'); ?></option>
                         <option value="destructive"><?php _e('Destructive', 'steget'); ?></option>
                     </select>
                 </p>

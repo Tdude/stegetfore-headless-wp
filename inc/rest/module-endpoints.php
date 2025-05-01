@@ -219,6 +219,15 @@ function prepare_module_for_response($post)
             return is_string($btn) ? json_decode($btn, true) : $btn;
         }, $buttons);
     }
+    // Ensure every button has a size, default to 'md' if missing
+    if (is_array($buttons)) {
+        foreach ($buttons as &$btn) {
+            if (!isset($btn['size']) || !$btn['size']) {
+                $btn['size'] = 'md';
+            }
+        }
+        unset($btn);
+    }
     $data['buttons'] = is_array($buttons) ? $buttons : [];
 
     $data = [
