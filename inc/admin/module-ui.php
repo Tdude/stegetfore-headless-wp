@@ -15,7 +15,7 @@ require_once get_template_directory() . '/inc/admin/modules/template-fields.php'
 // Content types
 require_once get_template_directory() . '/inc/admin/modules/content-types/hero.php';
 require_once get_template_directory() . '/inc/admin/modules/content-types/featured-posts.php';
-//require_once get_template_directory() . '/inc/admin/modules/content-types/cta.php';
+require_once get_template_directory() . '/inc/admin/modules/content-types/cta.php';
 require_once get_template_directory() . '/inc/admin/modules/content-types/testimonials.php';
 require_once get_template_directory() . '/inc/admin/modules/content-types/gallery.php';
 require_once get_template_directory() . '/inc/admin/modules/content-types/faq.php';

@@ -76,3 +76,67 @@
   max-width: 100%;
   height: auto;
 }
+
+.module-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+.module-header {
+  padding: 10px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #ccd0d4;
+  display: flex;
+  align-items: center;
+}
+
+.module-type {
+  color: #888;
+  margin-left: 10px;
+}
+
+.module-edit,
+.module-remove {
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.module-settings {
+  padding: 10px;
+}
+
+.module-override-options {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.module-placeholder {
+  background: #f1f1f1;
+  border: 1px dashed #ccd0d4;
+  height: 40px;
+  margin-bottom: 10px;
+}
+
+.module-selector {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.module-selector select {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+.module-actions {
+  margin-left: auto;
+}
+

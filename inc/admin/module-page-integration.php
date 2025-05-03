@@ -23,15 +23,26 @@ function render_page_modules_meta_box($post) {
     // Use our safe JSON decoder to prevent errors
     $page_modules = safe_json_decode(get_post_meta($post->ID, 'page_modules', true), true) ?: [];
 
-    // Get all available modules without any filtering
-    $modules = get_posts([
+    // Filter modules by template if provided in URL (e.g., ?module_template=hero)
+    $template_filter = isset($_GET['module_template']) ? sanitize_text_field($_GET['module_template']) : '';
+    $args = [
         'post_type' => 'module',
         'posts_per_page' => -1,
         'post_status' => 'publish',
         'orderby' => 'menu_order',
         'order' => 'ASC',
-        'suppress_filters' => true // Prevent any filtering
-    ]);
+        'suppress_filters' => true
+    ];
+    if ($template_filter) {
+        $args['meta_query'] = [
+            [
+                'key' => 'module_template',
+                'value' => $template_filter,
+                'compare' => '='
+            ]
+        ];
+    }
+    $modules = get_posts($args);
     ?>
 <p><?php _e('Add and arrange modules for this page:', 'steget'); ?></p>
 
@@ -118,73 +129,6 @@ function render_page_modules_meta_box($post) {
     <?php wp_nonce_field('get_module_info', 'nonce'); ?>
 </div>
 
-<style type="text/css">
-.module-item {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    margin-bottom: 10px;
-}
-
-.module-header {
-    padding: 10px;
-    background: #f9f9f9;
-    border-bottom: 1px solid #ccd0d4;
-    display: flex;
-    align-items: center;
-}
-
-.module-drag {
-    cursor: move;
-    margin-right: 10px;
-}
-
-.module-type {
-    color: #888;
-    margin-left: 10px;
-}
-
-.module-actions {
-    margin-left: auto;
-}
-
-.module-edit,
-.module-remove {
-    text-decoration: none;
-    margin-left: 5px;
-}
-
-.module-settings {
-    padding: 10px;
-}
-
-.module-override-options {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-}
-
-.module-placeholder {
-    background: #f1f1f1;
-    border: 1px dashed #ccd0d4;
-    height: 40px;
-    margin-bottom: 10px;
-}
-
-.module-selector {
-    margin-top: 15px;
-    display: flex;
-    align-items: center;
-}
-
-.module-selector select {
-    flex-grow: 1;
-    margin-right: 10px;
-}
-
-.hidden {
-    display: none;
-}
-</style>
 <?php
 }
 
@@ -306,45 +250,6 @@ function enqueue_page_modules_scripts($hook) {
         '1.0.0',
         true
     );
-    
-    // Add some basic styles for the module interface
-    wp_add_inline_style('wp-admin', '
-        .module-item {
-            background: #fff;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 3px;
-        }
-        .module-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .module-drag {
-            cursor: move;
-            margin-right: 10px;
-        }
-        .module-type {
-            color: #777;
-            margin-left: 5px;
-        }
-        .module-actions {
-            margin-left: auto;
-        }
-        .module-edit, .module-remove {
-            margin-left: 5px;
-            text-decoration: none;
-        }
-        .module-placeholder {
-            border: 1px dashed #bbb;
-            background: #f7f7f7;
-            height: 40px;
-            margin-bottom: 10px;
-        }
-        .module-selector {
-            margin-top: 15px;
-        }
-    ');
+
 }
 add_action('admin_enqueue_scripts', 'enqueue_page_modules_scripts');

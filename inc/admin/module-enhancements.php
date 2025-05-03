@@ -94,13 +94,13 @@ function add_modules_submenus() {
     // Add submenu items for each template type
     $templates = get_module_templates();
 
-    foreach ($templates as $template_key => $template_name) {
+    foreach ($templates as $template_key => $template_label) {
         add_submenu_page(
             'edit.php?post_type=module',
-            $template_name,
-            $template_name,
+            $template_label,
+            $template_label,
             'edit_posts',
-            'edit.php?post_type=module&module_template_filter=' . $template_key
+            'edit.php?post_type=module&module_template=' . $template_key
         );
     }
 

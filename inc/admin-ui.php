@@ -15,7 +15,8 @@ add_action('admin_enqueue_scripts', 'enqueue_global_admin_scripts');
 
 add_action('admin_enqueue_scripts', function($hook_suffix) {
     global $post_type;
-    if ($post_type === 'module') {
+    // Always load color picker for page post type (Selling Points)
+    if ($post_type === 'module' || $post_type === 'page') {
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
     }
