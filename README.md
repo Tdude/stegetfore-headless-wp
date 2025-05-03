@@ -31,7 +31,7 @@ The following module templates are available:
 | Template         | Description                               | Specific Fields                              |
 | ---------------- | ----------------------------------------- | -------------------------------------------- |
 | `hero`           | Hero banner with image, text, and buttons | Overlay opacity, text color, height          |
-| `selling_points` | Feature highlights with icons             | List of points with title, description, icon |
+| `selling_points` | Feature highlights with Lucide icons      | List of points with title, description, icon | https://lucide.dev/icons/categories |
 | `stats`          | Statistical information display           | List of stats with value, label, icon        |
 | `testimonials`   | Customer/client testimonials              | Testimonial IDs to display                   |
 | `gallery`        | Image gallery                             | Gallery image IDs                            |
@@ -46,6 +46,30 @@ The following module templates are available:
 | `text_media`     | Text with image/media                     | Uses content editor and featured image       |
 | `video`          | Video embed                               | Video URL                                    |
 | `form`           | Contact or custom form                    | Form ID (Contact Form 7)                     |
+
+## Directory Structure
+
+```
+inc/
+  admin/
+    modules/
+      content-types/
+        hero.php
+        selling-points.php
+        stats.php
+        ...
+    ...
+  ...
+js/
+css/
+templates/
+```
+
+- All content-type logic (admin UI, REST, sanitization) now lives in `inc/admin/modules/content-types/`.
+- The legacy `inc/features/` and `inc/admin/features/` folders have been removed.
+- Color picker initialization is handled per-module, not globally.
+
+## Migration Notes
 
 ## Working with Modules in the Frontend
 
@@ -619,51 +643,51 @@ All the API endpoints available in the headless WordPress theme, organized by ca
 
 ## Core Endpoints
 
-| Endpoint                             | Method | Description                                                        |
-| ------------------------------------ | ------ | ------------------------------------------------------------------ |
-| `/wp-json/steget/v1/test`            | GET    | Test endpoint to check if the API is working                       |
-| `/wp-json/steget/v1/site-info`       | GET    | Get basic site information (name, description, URL, etc.)          |
-| `/wp-json/steget/v1/posts-extended`  | GET    | Get extended posts data with custom fields                         |
-| `/wp-json/steget/v1/menu/{location}` | GET    | Get menu items for a specific location with hierarchical structure |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/test` | GET | Test endpoint to check if the API is working |
+| `/wp-json/steget/v1/site-info` | GET | Get basic site information (name, description, URL, etc.) |
+| `/wp-json/steget/v1/posts-extended` | GET | Get extended posts data with custom fields |
+| `/wp-json/steget/v1/menu/{location}` | GET | Get menu items for a specific location with hierarchical structure |
 
 ## Feature Endpoints
 
 ### Hero Section
 
-| Endpoint                            | Method | Description                               |
-| ----------------------------------- | ------ | ----------------------------------------- |
-| `/wp-json/steget/v1/hero/{page_id}` | GET    | Get hero section data for a specific page |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/hero/{page_id}` | GET | Get hero section data for a specific page |
 
 ### Selling Points
 
-| Endpoint                                      | Method | Description                                 |
-| --------------------------------------------- | ------ | ------------------------------------------- |
-| `/wp-json/steget/v1/selling-points/{page_id}` | GET    | Get selling points data for a specific page |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/selling-points/{page_id}` | GET | Get selling points data for a specific page |
 
 ### Testimonials
 
-| Endpoint                          | Method | Description           |
-| --------------------------------- | ------ | --------------------- |
-| `/wp-json/steget/v1/testimonials` | GET    | Get testimonials data |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/testimonials` | GET | Get testimonials data |
 
 ### Call to Action (CTA)
 
-| Endpoint                           | Method | Description                              |
-| ---------------------------------- | ------ | ---------------------------------------- |
-| `/wp-json/steget/v1/cta/{page_id}` | GET    | Get CTA section data for a specific page |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/cta/{page_id}` | GET | Get CTA section data for a specific page |
 
 ### Posts
 
-| Endpoint                            | Method | Description             |
-| ----------------------------------- | ------ | ----------------------- |
-| `/wp-json/steget/v1/featured-posts` | GET    | Get featured posts data |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/featured-posts` | GET | Get featured posts data |
 
 ## Module Endpoints
 
-| Endpoint                          | Method | Description                             |
-| --------------------------------- | ------ | --------------------------------------- |
-| `/wp-json/steget/v1/modules`      | GET    | Get all modules (with optional filters) |
-| `/wp-json/steget/v1/modules/{id}` | GET    | Get a specific module by ID             |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/modules` | GET | Get all modules (with optional filters) |
+| `/wp-json/steget/v1/modules/{id}` | GET | Get a specific module by ID |
 
 ### Module Filters
 
@@ -677,39 +701,39 @@ The `/wp-json/steget/v1/modules` endpoint accepts the following query parameters
 
 ## Contact Form 7 Endpoints
 
-| Endpoint                             | Method | Description                                       |
-| ------------------------------------ | ------ | ------------------------------------------------- |
-| `/wp-json/steget/v1/cf7/forms`       | GET    | List all available Contact Form 7 forms           |
-| `/wp-json/steget/v1/cf7/form/{id}`   | GET    | Get form structure and fields for a specific form |
-| `/wp-json/steget/v1/cf7/submit/{id}` | POST   | Submit a form                                     |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/cf7/forms` | GET | List all available Contact Form 7 forms |
+| `/wp-json/steget/v1/cf7/form/{id}` | GET | Get form structure and fields for a specific form |
+| `/wp-json/steget/v1/cf7/submit/{id}` | POST | Submit a form |
 
 ## Homepage Data Endpoints
 
-| Endpoint                              | Method | Description                         |
-| ------------------------------------- | ------ | ----------------------------------- |
-| `/wp-json/startpage/v1/homepage-data` | GET    | Get all homepage data (deprecated)  |
-| `/wp-json/startpage/v2/homepage-data` | GET    | Get all homepage data (new version) |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/startpage/v1/homepage-data` | GET | Get all homepage data (deprecated) |
+| `/wp-json/startpage/v2/homepage-data` | GET | Get all homepage data (new version) |
 
 ## Standard WordPress REST API Endpoints
 
 These are part of the core WordPress REST API but are relevant to the headless setup:
 
-| Endpoint                    | Method | Description               |
-| --------------------------- | ------ | ------------------------- |
-| `/wp-json/wp/v2/pages`      | GET    | Get all pages             |
-| `/wp-json/wp/v2/pages/{id}` | GET    | Get a specific page by ID |
-| `/wp-json/wp/v2/posts`      | GET    | Get all posts             |
-| `/wp-json/wp/v2/posts/{id}` | GET    | Get a specific post by ID |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/wp/v2/pages` | GET | Get all pages |
+| `/wp-json/wp/v2/pages/{id}` | GET | Get a specific page by ID |
+| `/wp-json/wp/v2/posts` | GET | Get all posts |
+| `/wp-json/wp/v2/posts/{id}` | GET | Get a specific post by ID |
 
 ## Custom Post Type Endpoints
 
-| Endpoint                          | Method | Description                       |
-| --------------------------------- | ------ | --------------------------------- |
-| `/wp-json/wp/v2/portfolio`        | GET    | Get all portfolio items           |
-| `/wp-json/wp/v2/testimonial`      | GET    | Get all testimonials              |
-| `/wp-json/wp/v2/module`           | GET    | Get all modules                   |
-| `/wp-json/evaluation/v1/save`     | POST   | Save student evaluation data      |
-| `/wp-json/evaluation/v1/get/{id}` | GET    | Get student evaluation data by ID |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/wp/v2/portfolio` | GET | Get all portfolio items |
+| `/wp-json/wp/v2/testimonial` | GET | Get all testimonials |
+| `/wp-json/wp/v2/module` | GET | Get all modules |
+| `/wp-json/evaluation/v1/save` | POST | Save student evaluation data |
+| `/wp-json/evaluation/v1/get/{id}` | GET | Get student evaluation data by ID |
 
 ## Example API Requests
 
@@ -846,11 +870,11 @@ Contact Form 7 (CF7) is a WordPress plugin for creating forms and send email, bu
 
 You have the following custom endpoints for Contact Form 7:
 
-| Endpoint                             | Method | Description                                       |
-| ------------------------------------ | ------ | ------------------------------------------------- |
-| `/wp-json/steget/v1/cf7/forms`       | GET    | List all available Contact Form 7 forms           |
-| `/wp-json/steget/v1/cf7/form/{id}`   | GET    | Get form structure and fields for a specific form |
-| `/wp-json/steget/v1/cf7/submit/{id}` | POST   | Submit a form                                     |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/wp-json/steget/v1/cf7/forms` | GET | List all available Contact Form 7 forms |
+| `/wp-json/steget/v1/cf7/form/{id}` | GET | Get form structure and fields for a specific form |
+| `/wp-json/steget/v1/cf7/submit/{id}` | POST | Submit a form |
 
 ## How to Use the API
 
