@@ -24,7 +24,7 @@ require_once get_template_directory() . '/inc/admin/modules/content-types/chart.
 require_once get_template_directory() . '/inc/admin/modules/content-types/sharing.php';
 require_once get_template_directory() . '/inc/admin/modules/content-types/login.php';
 require_once get_template_directory() . '/inc/admin/modules/content-types/payment.php';
-require_once get_template_directory() . '/inc/admin/modules/content-types/calendar.php';
+require_once get_template_directory() . '/inc/admin/modules/content-types/calendar.php'; // Keep calendar for future work
 
 // Other module components
 require_once get_template_directory() . '/inc/admin/modules/buttons.php';

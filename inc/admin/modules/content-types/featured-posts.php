@@ -10,8 +10,6 @@
  */
 function render_featured_posts_template_fields($post) {
     $settings = json_decode(get_post_meta($post->ID, 'module_featured_posts_settings', true), true) ?: [
-        'title' => '',
-        'subtitle' => '',
         'categories' => [],
         'post_count' => 6,
         'display_style' => 'grid',
@@ -29,26 +27,13 @@ function render_featured_posts_template_fields($post) {
     ]);
     ?>
 <div id="featured-posts_fields" class="template-fields">
-    <p>
-        <label for="featured_posts_title"><strong><?php _e('Section Title', 'steget'); ?>:</strong></label><br>
-        <input type="text" name="featured_posts_title" id="featured_posts_title"
-            value="<?php echo esc_attr($settings['title']); ?>" class="widefat">
-    </p>
-
-    <p>
-        <label for="featured_posts_subtitle"><strong><?php _e('Section Subtitle', 'steget'); ?>:</strong></label><br>
-        <input type="text" name="featured_posts_subtitle" id="featured_posts_subtitle"
-            value="<?php echo esc_attr($settings['subtitle']); ?>" class="widefat">
-    </p>
-
     <div class="category-selection-panel">
         <p>
             <label><strong><?php _e('Select Categories', 'steget'); ?>:</strong></label>
         </p>
-        <div class="category-checklist"
-            style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+        <div class="category-checklist">
             <?php foreach ($categories as $category) : ?>
-            <label style="display: block; margin-bottom: 5px;">
+            <label class="category-checklist-label">
                 <input type="checkbox" name="featured_posts_categories[]"
                     value="<?php echo esc_attr($category->term_id); ?>"
                     <?php echo in_array($category->term_id, $settings['categories']) ? 'checked' : ''; ?>>
@@ -99,19 +84,18 @@ function render_featured_posts_template_fields($post) {
         </p>
     </p>
 
-    <div class="display-options-panel"
-        style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
-        <h4 style="margin-top: 0;"><?php _e('Display Options', 'steget'); ?></h4>
-        <label style="display: block; margin-bottom: 10px;">
+    <div class="display-options-panel">
+        <h4 class="display-options-title"><?php _e('Display Options', 'steget'); ?></h4>
+        <label class="display-options-label">
             <input type="checkbox" name="featured_posts_show_date" <?php checked($settings['show_date'], true); ?>>
             <?php _e('Show Date', 'steget'); ?>
         </label>
-        <label style="display: block; margin-bottom: 10px;">
+        <label class="display-options-label">
             <input type="checkbox" name="featured_posts_show_excerpt"
                 <?php checked($settings['show_excerpt'], true); ?>>
             <?php _e('Show Excerpt', 'steget'); ?>
         </label>
-        <label style="display: block;">
+        <label class="display-options-label">
             <input type="checkbox" name="featured_posts_show_author" <?php checked($settings['show_author'], true); ?>>
             <?php _e('Show Author', 'steget'); ?>
         </label>

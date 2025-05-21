@@ -178,7 +178,7 @@ function get_module_templates()
         'sharing' => __('Social Sharing', 'steget'),
         'login' => __('Login Form', 'steget'),
         'payment' => __('Payment Form', 'steget'),
-        'calendar' => __('Calendar', 'steget'),
+        'calendar' => __('Calendar', 'steget'), // Kept for future work
         'cta' => __('Call to Action', 'steget'),
         'text_media' => __('Text with Media', 'steget'),
         'video' => __('Video', 'steget'),

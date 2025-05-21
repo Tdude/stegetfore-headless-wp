@@ -140,3 +140,34 @@
   margin-left: auto;
 }
 
+/* Featured Posts Module Styles */
+.category-checklist {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  background: #f9f9f9;
+  display: block;
+}
+
+.category-checklist-label {
+  display: block ;
+  margin-bottom: 5px;
+}
+
+.display-options-panel {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 5px;
+  display: block;
+}
+
+.display-options-title {
+  margin-top: 0;
+}
+
+.display-options-label {
+  display: block;
+  margin-bottom: 10px;
+}

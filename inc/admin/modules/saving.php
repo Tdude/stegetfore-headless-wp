@@ -96,29 +96,36 @@ function save_module_meta($post_id) {
                 break;
 
             case 'selling_points':
-                // Process selling points data
-                $points_count = isset($_POST['selling_points_count']) ? intval($_POST['selling_points_count']) : 0;
+                // Save Selling Points using the same robust pattern as other modules
+                $layout = sanitize_text_field($_POST['selling_points_layout'] ?? '');
+                $points_per_row = intval($_POST['selling_points_per_row'] ?? 3);
+                $titles = $_POST['selling_point_title'] ?? [];
+                $descriptions = $_POST['selling_point_description'] ?? [];
+                $icons = $_POST['selling_point_icon'] ?? [];
+                $colors = $_POST['selling_point_color'] ?? [];
                 $points = [];
-                
-                for ($i = 0; $i < $points_count; $i++) {
-                    if (isset($_POST['selling_point_title'][$i]) && !empty($_POST['selling_point_title'][$i])) {
+                $count = max(count($titles), count($descriptions), count($icons), count($colors));
+                for ($i = 0; $i < $count; $i++) {
+                    $title = isset($titles[$i]) ? sanitize_text_field($titles[$i]) : '';
+                    $desc = isset($descriptions[$i]) ? sanitize_textarea_field($descriptions[$i]) : '';
+                    $icon = isset($icons[$i]) ? sanitize_text_field($icons[$i]) : '';
+                    $color = isset($colors[$i]) ? sanitize_hex_color($colors[$i]) : '';
+                    // Only add if at least one field is not empty
+                    if ($title !== '' || $desc !== '' || $icon !== '' || $color !== '') {
                         $points[] = [
-                            'title' => sanitize_text_field($_POST['selling_point_title'][$i]),
-                            'description' => sanitize_textarea_field($_POST['selling_point_description'][$i]),
-                            'icon' => sanitize_text_field($_POST['selling_point_icon'][$i]),
-                            'image' => esc_url_raw($_POST['selling_point_image'][$i])
+                            'title' => $title,
+                            'description' => $desc,
+                            'icon' => $icon,
+                            'color' => $color
                         ];
                     }
                 }
-                
-                $selling_points_settings = [
-                    'title' => sanitize_text_field($_POST['selling_points_title']),
-                    'subtitle' => sanitize_textarea_field($_POST['selling_points_subtitle']),
-                    'layout' => sanitize_text_field($_POST['selling_points_layout']),
-                    'points_per_row' => intval($_POST['selling_points_per_row']),
+                $settings = [
+                    'layout' => $layout,
+                    'points_per_row' => $points_per_row,
                     'points' => $points
                 ];
-                update_post_meta($post_id, 'module_selling_points_settings', json_encode($selling_points_settings, JSON_UNESCAPED_UNICODE));
+                update_post_meta($post_id, 'module_selling_points', wp_json_encode($settings, JSON_UNESCAPED_UNICODE));
                 break;
 
             case 'stats':
@@ -229,6 +236,31 @@ function save_module_meta($post_id) {
                     }
                 }
                 update_post_meta($post_id, 'module_faq_items', json_encode($faq_items, JSON_UNESCAPED_UNICODE));
+                break;
+
+            case 'sharing':
+                // Save sharing URL
+                $sharing_url = isset($_POST['sharing_url']) ? esc_url_raw($_POST['sharing_url']) : '';
+                update_post_meta($post_id, 'module_sharing_url', $sharing_url);
+                // Save sharing networks
+                $names = $_POST['sharing_network_name'] ?? [];
+                $urls = $_POST['sharing_network_url'] ?? [];
+                $icons = $_POST['sharing_network_icon'] ?? [];
+                $networks = [];
+                $count = max(count($names), count($urls), count($icons));
+                for ($i = 0; $i < $count; $i++) {
+                    $name = isset($names[$i]) ? sanitize_text_field($names[$i]) : '';
+                    $url = isset($urls[$i]) ? esc_url_raw($urls[$i]) : '';
+                    $icon = isset($icons[$i]) ? sanitize_text_field($icons[$i]) : '';
+                    if ($name !== '' || $url !== '' || $icon !== '') {
+                        $networks[] = [
+                            'name' => $name,
+                            'url' => $url,
+                            'icon' => $icon
+                        ];
+                    }
+                }
+                update_post_meta($post_id, 'module_sharing_networks', wp_json_encode($networks, JSON_UNESCAPED_UNICODE));
                 break;
 
             // Add other template cases as needed

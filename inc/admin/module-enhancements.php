@@ -7,8 +7,7 @@ function add_module_admin_css() {
     global $typenow;
 
     if ($typenow === 'module') {
-        wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('wp-color-picker');
+        // Remove local color picker enqueue logic; handled globally in admin-ui.php
     }
 }
 add_action('admin_enqueue_scripts', 'add_module_admin_css');

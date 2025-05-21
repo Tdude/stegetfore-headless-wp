@@ -238,18 +238,16 @@ function enqueue_page_modules_scripts($hook) {
         return;
     }
 
-    wp_enqueue_style('wp-color-picker');
-    wp_enqueue_script('wp-color-picker');
+    // Remove local color picker enqueue logic; handled globally in admin-ui.php
     wp_enqueue_script('jquery-ui-sortable');
-    
-    // Enqueue the admin script that contains module page integration functionality
+
+    // Enqueue admin scripts for modules
     wp_enqueue_script(
         'steget-admin',
         get_template_directory_uri() . '/inc/js/admin.js',
-        ['jquery', 'jquery-ui-sortable', 'wp-color-picker'],
-        '1.0.0',
+        array('jquery'),
+        filemtime(get_template_directory() . '/inc/js/admin.js'),
         true
     );
-
 }
 add_action('admin_enqueue_scripts', 'enqueue_page_modules_scripts');

@@ -148,7 +148,14 @@ function register_show_content_with_modules_rest_field() {
         'content_display_settings',
         [
             'get_callback' => function ($post) {
-                $post_id = $post['id'];
+                // Robustly extract post ID from array or object
+                if (is_array($post) && isset($post['id'])) {
+                    $post_id = $post['id'];
+                } elseif (is_object($post) && isset($post->ID)) {
+                    $post_id = $post->ID;
+                } else {
+                    $post_id = 0;
+                }
                 $show_content = get_post_meta($post_id, 'show_content_with_modules', true);
                 $content_position = get_post_meta($post_id, 'content_position', true);
                 

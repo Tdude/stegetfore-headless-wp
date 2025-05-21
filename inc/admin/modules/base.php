@@ -103,9 +103,6 @@ function render_module_settings_meta_box($post) {
 
 <script type="text/javascript">
 jQuery(document).ready(function($) {
-    // Initialize color picker
-    $('.color-picker').wpColorPicker();
-
     // Show/hide template fields based on template selection
     function toggleTemplateFields() {
         var template = $('#module_template').val();
