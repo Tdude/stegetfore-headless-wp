@@ -1,4 +1,19 @@
 <?php
+// DEBUG
+add_action('save_post', function($post_id, $post, $update) {
+    file_put_contents('/tmp/test.log', '[steget-admin] save_post fired for post_id ' . $post_id . ' post_type: ' . $post->post_type . ' update: ' . var_export($update, true) . PHP_EOL, FILE_APPEND);
+}, 10, 3);
+// DEBUG
+add_action('save_post_module', function($post_id) {
+    file_put_contents('/tmp/test.log', '[steget-admin] save_post_module fired for post_id ' . $post_id . PHP_EOL, FILE_APPEND);
+    if (isset($_POST['module_template'])) {
+        file_put_contents('/tmp/test.log', '[steget-admin] module_template in POST: ' . $_POST['module_template'] . PHP_EOL, FILE_APPEND);
+    } else {
+        file_put_contents('/tmp/test.log', '[steget-admin] module_template NOT in POST' . PHP_EOL, FILE_APPEND);
+    }
+}, 10);
+
+
 // Main functions.php - only bootstraps and includes
 if (!defined('ABSPATH')) exit;
 
@@ -49,3 +64,46 @@ foreach ($required_files as $file) {
         error_log("Could not find file: $file");
     }
 }
+
+// --- Robustly save module_template on every publish/update ---
+add_action('save_post_module', function($post_id) {
+    file_put_contents('/tmp/test.log', '[steget-admin] save_post_module fired for post_id ' . $post_id . PHP_EOL, FILE_APPEND);
+
+    // If module_template is in POST, save it
+    if (isset($_POST['module_template'])) {
+        update_post_meta($post_id, 'module_template', $_POST['module_template']);
+        file_put_contents('/tmp/test.log', '[steget-admin] module_template in POST: ' . $_POST['module_template'] . PHP_EOL, FILE_APPEND);
+    } else {
+        // Fallback: if not set, set a default if not already present
+        $current = get_post_meta($post_id, 'module_template', true);
+        if (!$current) {
+            $default = 'sharing'; // or whatever your default should be
+            update_post_meta($post_id, 'module_template', $default);
+            file_put_contents('/tmp/test.log', '[steget-admin] module_template defaulted to: ' . $default . PHP_EOL, FILE_APPEND);
+        } else {
+            file_put_contents('/tmp/test.log', '[steget-admin] module_template already set: ' . $current . PHP_EOL, FILE_APPEND);
+        }
+    }
+}, 10);
+
+// --- AJAX handler to save module template selection from admin.js ---
+add_action('wp_ajax_steget_save_module_template', function() {
+    error_log('[steget-admin] steget_save_module_template called');
+    if (!current_user_can('edit_posts')) {
+        error_log('[steget-admin] Permission denied');
+        wp_send_json_error('Permission denied');
+    }
+    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    $template = isset($_POST['template']) ? sanitize_text_field($_POST['template']) : '';
+    if (!$post_id || !$template) {
+        error_log('[steget-admin] Missing post_id or template');
+        wp_send_json_error('Missing post_id or template');
+    }
+    if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'update-post_' . $post_id)) {
+        error_log('[steget-admin] Invalid nonce for post_id ' . $post_id);
+        wp_send_json_error('Invalid nonce');
+    }
+    $result = update_post_meta($post_id, 'module_template', $template);
+    error_log('[steget-admin] update_post_meta result: ' . var_export($result, true) . ' for post_id ' . $post_id . ' template ' . $template);
+    wp_send_json_success('Template saved');
+});
