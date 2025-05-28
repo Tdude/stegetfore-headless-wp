@@ -938,7 +938,7 @@ fetch(`/wp-json/steget/v1/cf7/submit/${formId}`, {
   });
 ```
 
-## Important Notes About Submission
+## Notes About Submission
 
 1. **Content-Type**: Always use `application/x-www-form-urlencoded` for the content type. This is what CF7 expects.
 
@@ -1110,3 +1110,8 @@ const ContactForm = ({ formId, apiUrl = "/wp-json" }) => {
 };
 
 export default ContactForm;
+```
+
+## On that note
+Had enough yet? These examples were created by Claude AI going through some files and the file tree. Whatever. They might help as examples but many of them are refactored since.
+Good luck and remember: **if you don't ask, you won't get answers!**
