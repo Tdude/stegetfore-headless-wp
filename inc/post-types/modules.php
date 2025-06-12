@@ -19,7 +19,7 @@ $content_types_dir = get_template_directory() . '/inc/admin/modules/content-type
 if (is_dir($content_types_dir)) {
     foreach (glob($content_types_dir . '*.php') as $content_type_file) {
         require_once $content_type_file;
-        error_log('Loaded content-type module: ' . basename($content_type_file));
+        // error_log('Loaded content-type module: ' . basename($content_type_file));
     }
 }
 
@@ -40,7 +40,7 @@ foreach ($module_components as $component) {
     $component_path = get_template_directory() . '/inc' . $component;
     if (file_exists($component_path)) {
         require_once $component_path;
-        error_log("Loaded module component: $component");
+        // error_log("Loaded module component: $component");
     } else {
         error_log("MISSING module component: $component");
     }

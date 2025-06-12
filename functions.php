@@ -107,3 +107,9 @@ add_action('wp_ajax_steget_save_module_template', function() {
     error_log('[steget-admin] update_post_meta result: ' . var_export($result, true) . ' for post_id ' . $post_id . ' template ' . $template);
     wp_send_json_success('Template saved');
 });
+
+// --- Add custom content to the WordPress admin footer ---
+function my_custom_admin_footer_content() {
+    echo '<p style=\"text-align: center;\">&copy; ' . date('Y') . ' Tryggve är en BOLD STATEMENT produktion. Kodad av <a href="https://github.com/Tdude">Tibor Berki</a>.</p>';
+}
+add_action( 'admin_footer_text', 'my_custom_admin_footer_content' );
