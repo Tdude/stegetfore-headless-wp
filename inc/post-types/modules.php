@@ -117,7 +117,7 @@ function register_module_taxonomies()
         'update_item' => __('Update Module Category', 'steget'),
         'add_new_item' => __('Add New Module Category', 'steget'),
         'new_item_name' => __('New Module Category Name', 'steget'),
-        'menu_name' => __('ModCats', 'steget'),
+        'menu_name' => __('Categories', 'steget'),
     ];
 
     $category_args = [

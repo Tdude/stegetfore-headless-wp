@@ -82,43 +82,19 @@ add_filter('default_content', 'module_template_default_content', 10, 2);
  * Add modules submenu for easier management
  */
 function add_modules_submenus() {
-    add_submenu_page(
-        'edit.php?post_type=module',
-        __('All Templates', 'steget'),
-        __('All Templates', 'steget'),
-        'edit_posts',
-        'edit.php?post_type=module'
-    );
-
     // Add submenu items for each template type
     $templates = get_module_templates();
 
     foreach ($templates as $template_key => $template_label) {
         add_submenu_page(
             'edit.php?post_type=module',
-            $template_label,
+            '',
             $template_label,
             'edit_posts',
             'edit.php?post_type=module&module_template=' . $template_key
         );
     }
 
-    // Add categories and placements submenus
-    add_submenu_page(
-        'edit.php?post_type=module',
-        __('Categories', 'steget'),
-        __('Categories', 'steget'),
-        'manage_categories',
-        'edit-tags.php?taxonomy=module_category&post_type=module'
-    );
-
-    add_submenu_page(
-        'edit.php?post_type=module',
-        __('Placements', 'steget'),
-        __('Placements', 'steget'),
-        'manage_categories',
-        'edit-tags.php?taxonomy=module_placement&post_type=module'
-    );
 }
 add_action('admin_menu', 'add_modules_submenus');
 
